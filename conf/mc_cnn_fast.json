@@ -1,0 +1,30 @@
+{
+  "invalid_disparity": "np.nan",
+  "stereo" : {
+    "stereo_method": "mc_cnn",
+    "subpix": 1,
+    "window_size": 11,
+    "mc_cnn_arch": "fast",
+    "model_path": "/work/OT/siaa/3D/Development/rt_corr_deep/mc_cnn_fast_output_2/mc_cnn_fast_epoch13.pt"
+  },
+  "aggregation" : {
+    "aggregation_method": "none"
+  },
+  "optimization" : {
+    "optimization_method": "sgm",
+    "P1": 8,
+    "P2": 32
+  },
+  "refinement": {
+    "refinement_method": "vfit"
+  },
+ "filter" : {
+   "filter_method": "median",
+   "filter_size": 3
+  },
+  "validation" : {
+    "validation_method": "cross_checking",
+    "cross_checking_threshold": 1,
+    "right_left_mode": "accurate"
+  }
+}
