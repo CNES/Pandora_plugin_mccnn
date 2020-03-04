@@ -94,21 +94,16 @@ class MCCNN(stereo.AbstractStereo):
         if self._architecture == 'fast':
             cv = run_mc_cnn_fast(img_ref, img_sec, disp_min, disp_max, self._trained_net)
 
-            # TODO : supprimer ces lignes quand on aura accès à la libsgm en float
-            # Because sgm takes a cost volume of type uint8
-            # Before : cost range into (-1, 1)
-            # After : cost range into (0, 2)
-            #cv += 1
-            # After : cost range into (0, 200)
-            #cv *= 100
         # Accurate architecture
         else:
             cv = run_mc_cnn_accurate(img_ref, img_sec, disp_min, disp_max, self._trained_net)
 
         # Create the xarray.DataSet that will contain the cost_volume of dimensions (row, col, disp)
         metadata = {"measure": 'mc_cnn_' + self._architecture, "subpixel": self._subpix,
-                    "offset_row_col": int((self._window_size - 1) / 2), "window_size": self._window_size}
+                    "offset_row_col": int((self._window_size - 1) / 2), "window_size": self._window_size,
+                    "type_measure": "min"}
 
         # Allocate the xarray cost volume
         cv = self.allocate_costvolume(img_ref, self._subpix, disp_min, disp_max, self._window_size, metadata, cv)
+
         return cv
