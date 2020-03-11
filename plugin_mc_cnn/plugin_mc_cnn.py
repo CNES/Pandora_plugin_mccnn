@@ -1,11 +1,13 @@
-# coding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright: (c) 2019 Centre National d'Etudes Spatiales
+
 """
-:author: Véronique Defonte
-:organization: CS SI
-:copyright: 2019 CNES. All rights reserved.
-:created: dec. 2019
+This module contains all functions to calculate the cost volume with mc-cnn networks
 """
+
 import logging
+import numpy as np
 
 from pandora.stereo import stereo
 from mc_cnn.run import run_mc_cnn_fast, run_mc_cnn_accurate
@@ -99,12 +101,25 @@ class MCCNN(stereo.AbstractStereo):
         else:
             cv = run_mc_cnn_accurate(img_ref, img_sec, disp_min, disp_max, self._trained_net)
 
-        # Create the xarray.DataSet that will contain the cost_volume of dimensions (row, col, disp)
+        # Invalid invalid pixels : cost of invalid pixels will be = np.nan
+        offset = int((self._window_size - 1) / 2)
+        mask_ref, mask_sec = self.masks_dilatation(img_ref, img_sec, offset, self._window_size, self._subpix, cfg)
+        ny_, nx_ = mask_ref.shape
+        disparity_range = np.arange(disp_min, disp_max + 1)
+
+        for disp in disparity_range:
+            # range in the reference image
+            p = (max(0 - disp, 0), min(nx_ - disp, nx_))
+            # range in the secondary image
+            q = (max(0 + disp, 0), min(nx_ + disp, nx_))
+            d = int(disp - disp_min)
+
+            cv[:, p[0]:p[1], d] += mask_sec[0].data[:, q[0]:q[1]] + mask_ref.data[:, p[0]:p[1]]
+
+        # Allocate the xarray cost volume
         metadata = {"measure": 'mc_cnn_' + self._architecture, "subpixel": self._subpix,
                     "offset_row_col": int((self._window_size - 1) / 2), "window_size": self._window_size,
                     "type_measure": "min"}
-
-        # Allocate the xarray cost volume
         cv = self.allocate_costvolume(img_ref, self._subpix, disp_min, disp_max, self._window_size, metadata, cv)
 
         return cv
