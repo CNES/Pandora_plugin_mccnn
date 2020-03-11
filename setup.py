@@ -12,8 +12,11 @@ if hal_uid:
     gitlab_auth = 'gu={}@'.format(hal_uid)
     _ssh = '-ssh'
 
-# TODO : Faire les requirements et pointer sur la version libsgm en float
-requirements = []
+requirements = ['numpy',
+                'mc-cnn @ git+ssh://{}git@gitlab{}.cnes.fr/OutilsCommuns/CorrelateurChaine3D/mc-cnn.git@master'.format(
+                    gitlab_auth, _ssh),
+                'pandora @ git+ssh://{}git@gitlab{}.cnes.fr/OutilsCommuns/CorrelateurChaine3D/pandora.git@master'.format(
+                    gitlab_auth, _ssh)]
 
 def readme():
     with open("README.md", "r", "utf-8") as f:
