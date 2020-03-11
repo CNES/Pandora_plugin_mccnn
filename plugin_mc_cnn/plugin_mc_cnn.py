@@ -10,6 +10,7 @@ import logging
 from pandora.stereo import stereo
 from mc_cnn.run import run_mc_cnn_fast, run_mc_cnn_accurate
 
+
 @stereo.AbstractStereo.register_subclass('mc_cnn')
 class MCCNN(stereo.AbstractStereo):
     """
@@ -35,7 +36,7 @@ class MCCNN(stereo.AbstractStereo):
         """
         Check and update the configuration
 
-        :param cfg: optional configuration, {'mc_cnn_arch': 'fast' | 'accurate' }
+        :param cfg: configuration
         :type cfg: dictionary
         """
         if 'mc_cnn_arch' in cfg:

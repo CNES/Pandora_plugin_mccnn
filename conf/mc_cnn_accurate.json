@@ -5,7 +5,7 @@
     "subpix": 1,
     "window_size": 11,
     "mc_cnn_arch": "accurate",
-    "model_path": "/work/OT/siaa/3D/Development/rt_corr_deep/mc_cnn_accurate_without_augmentation/mc_cnn_acc_epoch13.pt"
+    "model_path": "plugin_mc-cnn/weights/mc_cnn_accurate_mb_weights.pt"
   },
   "aggregation" : {
     "aggregation_method": "cbca"
