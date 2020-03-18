@@ -119,7 +119,7 @@ class MCCNN(stereo.AbstractStereo):
         # Allocate the xarray cost volume
         metadata = {"measure": 'mc_cnn_' + self._architecture, "subpixel": self._subpix,
                     "offset_row_col": int((self._window_size - 1) / 2), "window_size": self._window_size,
-                    "type_measure": "min"}
+                    "type_measure": "min", "cmax": 1}
         cv = self.allocate_costvolume(img_ref, self._subpix, disp_min, disp_max, self._window_size, metadata, cv)
 
         return cv
