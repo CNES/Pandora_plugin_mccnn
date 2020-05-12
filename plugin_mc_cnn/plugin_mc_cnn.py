@@ -8,6 +8,8 @@ This module contains all functions to calculate the cost volume with mc-cnn netw
 
 import logging
 import numpy as np
+from json_checker import Checker, And
+import os
 
 from pandora.stereo import stereo
 from mc_cnn.run import run_mc_cnn_fast, run_mc_cnn_accurate
@@ -21,50 +23,52 @@ class MCCNN(stereo.AbstractStereo):
     similarity score
 
     """
-    _architecture = 'fast'
-    _window_size = 11
-    _subpix = 1
-    _trained_net = None
+    # Type of mc_cnn architecture : fast or accurate
+    _MC_CNN_ARCH = None
+    _WINDOW_SIZE = 11
+    _SUBPIX = 1
+    # Path to the pretrained model
+    _MODEL_PATH = None
 
     def __init__(self, **cfg):
         """
 
-        :param cfg: optional configuration, {'stereo_method': value, 'mc_cnn_arch': 'fast' | 'accurate' }
+        :param cfg: optional configuration, {'stereo_method': value, 'mc_cnn_arch': 'fast' | 'accurate',
+        'window_size': value, 'subpix': value, 'model_path' :value}
         :type cfg: dictionary
         """
-        self.check_config(**cfg)
+        self.cfg = self.check_config(**cfg)
+        self._mc_cnn_arch = str(self.cfg['mc_cnn_arch'])
+        self._model_path = str(self.cfg['model_path'])
+        self._window_size = self.cfg['window_size']
+        self._subpix = self.cfg['subpix']
 
     def check_config(self, **cfg):
         """
-        Check and update the configuration
+        Add default values to the dictionary if there are missing elements and check if the dictionary is correct
 
-        :param cfg: configuration
-        :type cfg: dictionary
+        :param cfg: stereo configuration
+        :type cfg: dict
+        :return cfg: stereo configuration updated
+        :rtype: dict
         """
-        if 'mc_cnn_arch' in cfg:
-            if cfg['mc_cnn_arch'] == 'fast':
-                self._architecture = 'fast'
-            elif cfg['mc_cnn_arch'] == 'accurate':
-                self._architecture = 'accurate'
-            else:
-                logging.error("No mc-cnn architecture name {} supported".format(cfg['mc_cnn_arch']))
-                exit()
+        # Give the default value if the required element is not in the configuration
+        if 'window_size' not in cfg:
+            cfg['window_size'] = self._WINDOW_SIZE
+        if 'subpix' not in cfg:
+            cfg['subpix'] = self._SUBPIX
 
-        if 'window_size' in cfg:
-            if int(cfg['window_size']) != 11:
-                logging.error("Mc-cnn similarity measure only accepts window_size = 11")
-                exit()
+        schema = {
+            "stereo_method": And(str, lambda x: x == 'mc_cnn'),
+            "window_size": And(int, lambda x: x == 11),
+            "subpix": And(int, lambda x: x == 1),
+            "mc_cnn_arch": And(str, lambda x: x == 'fast' or x == 'accurate'),
+            "model_path": And(str, lambda x: os.path.exists(x))
+        }
 
-        if 'subpix' in cfg:
-            if int(cfg['subpix']) != 1:
-                logging.error("Mc-cnn similarity measure only accepts subpixel = 1")
-                exit()
-
-        if not 'model_path' in cfg:
-            logging.error("A path to a trained network is required")
-            exit()
-        else:
-            self._trained_net = cfg['model_path']
+        checker = Checker(schema)
+        checker.validate(cfg)
+        return cfg
 
     def desc(self):
         """
@@ -94,12 +98,12 @@ class MCCNN(stereo.AbstractStereo):
         :return: the cost volume
         :rtype: xarray.Dataset, with the data variables cost_volume 3D xarray.DataArray (row, col, disp)
         """
-        if self._architecture == 'fast':
-            cv = run_mc_cnn_fast(img_ref, img_sec, disp_min, disp_max, self._trained_net)
+        if self._mc_cnn_arch == 'fast':
+            cv = run_mc_cnn_fast(img_ref, img_sec, disp_min, disp_max, self._model_path)
 
         # Accurate architecture
         else:
-            cv = run_mc_cnn_accurate(img_ref, img_sec, disp_min, disp_max, self._trained_net)
+            cv = run_mc_cnn_accurate(img_ref, img_sec, disp_min, disp_max, self._model_path)
 
         # Invalid invalid pixels : cost of invalid pixels will be = np.nan
         offset = int((self._window_size - 1) / 2)
@@ -117,7 +121,7 @@ class MCCNN(stereo.AbstractStereo):
             cv[:, p[0]:p[1], d] += mask_sec[0].data[:, q[0]:q[1]] + mask_ref.data[:, p[0]:p[1]]
 
         # Allocate the xarray cost volume
-        metadata = {"measure": 'mc_cnn_' + self._architecture, "subpixel": self._subpix,
+        metadata = {"measure": 'mc_cnn_' + self._mc_cnn_arch, "subpixel": self._subpix,
                     "offset_row_col": int((self._window_size - 1) / 2), "window_size": self._window_size,
                     "type_measure": "min", "cmax": 1}
         cv = self.allocate_costvolume(img_ref, self._subpix, disp_min, disp_max, self._window_size, metadata, cv)

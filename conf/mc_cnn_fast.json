@@ -11,12 +11,17 @@
     "aggregation_method": "cbca"
   },
   "optimization" : {
-    "optimization_method": "none",
-    "P1": 8,
-    "P2": 32
+    "optimization_method": "sgm",
+    "p2_method": "mc_cnn",
+    "sgm_p1": 2.3,
+    "sgm_p2": 55.9,
+    "sgm_q1": 4,
+    "sgm_q2": 8,
+    "sgm_d": 0.08,
+    "sgm_v": 1.5
   },
   "refinement": {
-    "refinement_method": "vfit"
+    "refinement_method": "quadratic"
   },
  "filter" : {
    "filter_method": "median",
