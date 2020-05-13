@@ -6,10 +6,11 @@
 This module contains all functions to calculate the cost volume with mc-cnn networks
 """
 
-import logging
 import numpy as np
 from json_checker import Checker, And
+from typing import Dict, Union
 import os
+import xarray as xr
 
 from pandora.stereo import stereo
 from mc_cnn.run import run_mc_cnn_fast, run_mc_cnn_accurate
@@ -30,7 +31,7 @@ class MCCNN(stereo.AbstractStereo):
     # Path to the pretrained model
     _MODEL_PATH = None
 
-    def __init__(self, **cfg):
+    def __init__(self, **cfg: Union[int, str]):
         """
 
         :param cfg: optional configuration, {'stereo_method': value, 'mc_cnn_arch': 'fast' | 'accurate',
@@ -43,7 +44,7 @@ class MCCNN(stereo.AbstractStereo):
         self._window_size = self.cfg['window_size']
         self._subpix = self.cfg['subpix']
 
-    def check_config(self, **cfg):
+    def check_config(self, **cfg: Union[int, str]) -> Dict[str, Union[int, str]]:
         """
         Add default values to the dictionary if there are missing elements and check if the dictionary is correct
 
@@ -77,7 +78,7 @@ class MCCNN(stereo.AbstractStereo):
         """
         print('MC-CNN similarity measure')
 
-    def compute_cost_volume(self, img_ref, img_sec, disp_min, disp_max, **cfg):
+    def compute_cost_volume(self, img_ref: xr.Dataset, img_sec: xr.Dataset, disp_min: int, disp_max: int, **cfg: Union[int, str, float]) -> xr.Dataset:
         """
         Computes the cost volume for a pair of images
 
