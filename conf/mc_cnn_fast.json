@@ -1,4 +1,10 @@
 {
+  "input" : {
+    "img_ref" : "plugin_mc-cnn/test/image/ref.png",
+    "img_sec" : "plugin_mc-cnn/test/image/sec.png",
+    "disp_min" : -60,
+    "disp_max" : 0
+  },
   "invalid_disparity": "np.nan",
   "stereo" : {
     "stereo_method": "mc_cnn",
@@ -11,14 +17,7 @@
     "aggregation_method": "cbca"
   },
   "optimization" : {
-    "optimization_method": "sgm",
-    "p2_method": "mc_cnn",
-    "sgm_p1": 2.3,
-    "sgm_p2": 55.9,
-    "sgm_q1": 4,
-    "sgm_q2": 8,
-    "sgm_d": 0.08,
-    "sgm_v": 1.5
+    "optimization_method": "none"
   },
   "refinement": {
     "refinement_method": "quadratic"
