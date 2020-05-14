@@ -21,26 +21,21 @@ u@m $ pip install --upgrade pip
 
 L'utilisation du réseau mc-cnn se fait via [pandora](https://gitlab.cnes.fr/OutilsCommuns/CorrelateurChaine3D/pandora).
 
+
 ```bash
-usage: pandora [-h] [-ref_mask REF_MASK] [-sec_mask SEC_MASK] [-v]
-               img_ref img_sec disp_min disp_max output_dir config
+    usage: pandora [-h] [-v] config
 
-Pandora stereo matching
-
-positional arguments:
-  img_ref             Path to the reference image
-  img_sec             Path to the secondary image
-  disp_min            Minimal disparity
-  disp_max            Maximal disparity
-  output_dir          Path to the output directory
-  config              Path to a json file containing the algorithm parameters
-
-optional arguments:
-  -h, --help          show this help message and exit
-  -ref_mask REF_MASK  Path to the reference validity mask
-  -sec_mask SEC_MASK  Path to the secondary validity mask
-  -v, --verbose       Increase output verbosity
+    Pandora stereo matching
+    
+    positional arguments:
+      output_dir          Path to the output director
+      config              Path to a json file containing the input files paths and the algorithm parameters
+    
+    optional arguments:
+      -h, --help          show this help message and exit
+      -v, --verbose       Increase output verbosity
 ```
 
-Les fichiers de configuration pour les réseaux mc-cnn fast et accurate sont disponibles dans le dossier conf/.
-Les points des réseaux mc-cnn fast et accurate entrainés sur Middlebury sont disponibles dans le dossier weights/.
+Les fichiers de configuration pour les réseaux mc-cnn fast et accurate sont disponibles dans le dossier conf/. 
+Il faut renseigner le chemin des poids des réseaux pré-entraînés.
+Les poids des réseaux mc-cnn fast et accurate entrainés sur Middlebury sont disponibles dans le dossier weights/.

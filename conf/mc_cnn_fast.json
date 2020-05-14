@@ -1,4 +1,10 @@
 {
+  "input" : {
+    "img_ref" : "plugin_mc-cnn/test/image/ref.png",
+    "img_sec" : "plugin_mc-cnn/test/image/sec.png",
+    "disp_min" : -60,
+    "disp_max" : 0
+  },
   "invalid_disparity": "np.nan",
   "stereo" : {
     "stereo_method": "mc_cnn",
@@ -11,12 +17,10 @@
     "aggregation_method": "cbca"
   },
   "optimization" : {
-    "optimization_method": "none",
-    "P1": 8,
-    "P2": 32
+    "optimization_method": "none"
   },
   "refinement": {
-    "refinement_method": "vfit"
+    "refinement_method": "quadratic"
   },
  "filter" : {
    "filter_method": "median",
