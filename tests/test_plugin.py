@@ -12,7 +12,7 @@ import numpy as np
 import xarray as xr
 
 import pandora
-from plugin_mc_cnn.plugin_mc_cnn import MCCNN
+from pandora_plugin_mc_cnn.plugin_mc_cnn import MCCNN
 
 
 class TestPlugin(unittest.TestCase):
