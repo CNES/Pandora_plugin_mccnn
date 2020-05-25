@@ -1,7 +1,7 @@
 {
   "input" : {
-    "img_ref" : "test/image/ref.png",
-    "img_sec" : "test/image/sec.png",
+    "img_ref" : "tests/image/ref.png",
+    "img_sec" : "tests/image/sec.png",
     "disp_min" : -60,
     "disp_max" : 0
   },

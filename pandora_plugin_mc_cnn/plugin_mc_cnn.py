@@ -106,6 +106,39 @@ class MCCNN(stereo.AbstractStereo):
         else:
             cv = run_mc_cnn_accurate(img_ref, img_sec, disp_min, disp_max, self._model_path)
 
+        # Invalid cost
+        cv = self.invalidates_cost(img_ref, img_sec, disp_min, disp_max, cv, **cfg)
+
+        # Allocate the xarray cost volume
+        metadata = {"measure": 'mc_cnn_' + self._mc_cnn_arch, "subpixel": self._subpix,
+                    "offset_row_col": int((self._window_size - 1) / 2), "window_size": self._window_size,
+                    "type_measure": "min", "cmax": 1}
+        cv = self.allocate_costvolume(img_ref, self._subpix, disp_min, disp_max, self._window_size, metadata, cv)
+
+        return cv
+
+    def invalidates_cost(self, img_ref: xr.Dataset, img_sec: xr.Dataset, disp_min: int, disp_max: int, cv: np.ndarray,
+                         **cfg: Union[int, str, float]) -> np.ndarray:
+        """
+        Invalidates pixels in the cost volume using reference and secondary mask image
+
+        :param img_ref: reference Dataset image
+        :type img_ref: xarray.Dataset containing :
+            - im : 2D (row, col) xarray.DataArray
+        :param img_sec: secondary Dataset image
+        :type img_sec: xarray.Dataset containing :
+            - im : 2D (row, col) xarray.DataArray
+        :param disp_min: minimum disparity
+        :type disp_min: int
+        :param disp_max: maximum disparity
+        :type disp_max: int
+        :param cv: cost volume
+        :type cv: 3D numpy array (row, col, disp)
+        :param cfg: images configuration containing the mask convention : valid_pixels, no_data
+        :type cfg: dict
+        :return: the cost volume with invalid costs = np.nan
+        :rtype: 3D numpy array (row, col, disp)
+        """
         # Invalid invalid pixels : cost of invalid pixels will be = np.nan
         offset = int((self._window_size - 1) / 2)
         mask_ref, mask_sec = self.masks_dilatation(img_ref, img_sec, offset, self._window_size, self._subpix, cfg)
@@ -120,11 +153,5 @@ class MCCNN(stereo.AbstractStereo):
             d = int(disp - disp_min)
 
             cv[:, p[0]:p[1], d] += mask_sec[0].data[:, q[0]:q[1]] + mask_ref.data[:, p[0]:p[1]]
-
-        # Allocate the xarray cost volume
-        metadata = {"measure": 'mc_cnn_' + self._mc_cnn_arch, "subpixel": self._subpix,
-                    "offset_row_col": int((self._window_size - 1) / 2), "window_size": self._window_size,
-                    "type_measure": "min", "cmax": 1}
-        cv = self.allocate_costvolume(img_ref, self._subpix, disp_min, disp_max, self._window_size, metadata, cv)
 
         return cv
