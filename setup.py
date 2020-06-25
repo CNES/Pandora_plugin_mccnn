@@ -17,7 +17,6 @@ setup(name='plugin_mc_cnn',
       version='x.y.z',
       description='Pandora plugin to create the cost volume with the neural network mc-cnn',
       long_description=readme(),
-      setup_requires=['very-good-setuptools-git-version'],
       packages=find_packages(),
       install_requires=requirements,
       entry_points="""
