@@ -13,7 +13,7 @@ def readme():
         return f.read()
 
 
-setup(name='plugin_mc_cnn',
+setup(name='pandora_plugin_mc_cnn',
       version='x.y.z',
       description='Pandora plugin to create the cost volume with the neural network mc-cnn',
       long_description=readme(),
@@ -21,6 +21,6 @@ setup(name='plugin_mc_cnn',
       install_requires=requirements,
       entry_points="""
           [pandora.plugin]
-          plugin_mc_cnn = plugin_mc_cnn.plugin_mc_cnn:MCCNN
+          pandora_plugin_mc_cnn = pandora_plugin_mc_cnn.plugin_mc_cnn:MCCNN
       """,
       )

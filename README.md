@@ -16,7 +16,7 @@ u@m $ python -m venv myEnv
 u@m $ source myEnv/bin/activate
 (myEnv) u@m $ pip install --upgrade pip
 (myEnv) u@m $ pip install numpy
-(myEnv) u@m $ pip install plugin_mc-cnn
+(myEnv) u@m $ pip install pandora_plugin_mc_cnn
 ```
 
 **Mode développeur**
