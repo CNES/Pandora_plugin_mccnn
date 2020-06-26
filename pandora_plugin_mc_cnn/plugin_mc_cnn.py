@@ -39,10 +39,10 @@ class MCCNN(stereo.AbstractStereo):
         :type cfg: dictionary
         """
         self.cfg = self.check_config(**cfg)
-        self._mc_cnn_arch = str(self.cfg['mc_cnn_arch'])
-        self._model_path = str(self.cfg['model_path'])
-        self._window_size = self.cfg['window_size']
-        self._subpix = self.cfg['subpix']
+        self.mc_cnn_arch = str(self.cfg['mc_cnn_arch'])
+        self.model_path = str(self.cfg['model_path'])
+        self.window_size = self.cfg['window_size']
+        self.subpix = self.cfg['subpix']
 
     def check_config(self, **cfg: Union[int, str]) -> Dict[str, Union[int, str]]:
         """
@@ -99,21 +99,21 @@ class MCCNN(stereo.AbstractStereo):
         :return: the cost volume
         :rtype: xarray.Dataset, with the data variables cost_volume 3D xarray.DataArray (row, col, disp)
         """
-        if self._mc_cnn_arch == 'fast':
-            cv = run_mc_cnn_fast(img_ref, img_sec, disp_min, disp_max, self._model_path)
+        if self.mc_cnn_arch == 'fast':
+            cv = run_mc_cnn_fast(img_ref, img_sec, disp_min, disp_max, self.model_path)
 
         # Accurate architecture
         else:
-            cv = run_mc_cnn_accurate(img_ref, img_sec, disp_min, disp_max, self._model_path)
+            cv = run_mc_cnn_accurate(img_ref, img_sec, disp_min, disp_max, self.model_path)
 
         # Invalid cost
         cv = self.invalidates_cost(img_ref, img_sec, disp_min, disp_max, cv, **cfg)
 
         # Allocate the xarray cost volume
-        metadata = {"measure": 'mc_cnn_' + self._mc_cnn_arch, "subpixel": self._subpix,
-                    "offset_row_col": int((self._window_size - 1) / 2), "window_size": self._window_size,
+        metadata = {"measure": 'mc_cnn_' + self.mc_cnn_arch, "subpixel": self.subpix,
+                    "offset_row_col": int((self.window_size - 1) / 2), "window_size": self.window_size,
                     "type_measure": "min", "cmax": 1}
-        cv = self.allocate_costvolume(img_ref, self._subpix, disp_min, disp_max, self._window_size, metadata, cv)
+        cv = self.allocate_costvolume(img_ref, self.subpix, disp_min, disp_max, self.window_size, metadata, cv)
 
         return cv
 
@@ -140,8 +140,8 @@ class MCCNN(stereo.AbstractStereo):
         :rtype: 3D numpy array (row, col, disp)
         """
         # Invalid invalid pixels : cost of invalid pixels will be = np.nan
-        offset = int((self._window_size - 1) / 2)
-        mask_ref, mask_sec = self.masks_dilatation(img_ref, img_sec, offset, self._window_size, self._subpix, cfg)
+        offset = int((self.window_size - 1) / 2)
+        mask_ref, mask_sec = self.masks_dilatation(img_ref, img_sec, offset, self.window_size, self.subpix, cfg)
         ny_, nx_ = mask_ref.shape
         disparity_range = np.arange(disp_min, disp_max + 1)
 
