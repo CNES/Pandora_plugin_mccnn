@@ -1,0 +1,34 @@
+{
+  "input" : {
+    "img_ref" : "tests/image/ref.png",
+    "img_sec" : "tests/image/sec.png",
+    "disp_min" : -60,
+    "disp_max" : 0
+  },
+  "invalid_disparity": "np.nan",
+  "stereo" : {
+    "stereo_method": "mc_cnn",
+    "subpix": 1,
+    "window_size": 11,
+    "mc_cnn_arch": "fast",
+    "model_path": "weights/mc_cnn_fast_mb_weights.pt"
+  },
+  "aggregation" : {
+    "aggregation_method": "cbca"
+  },
+  "optimization" : {
+    "optimization_method": "none"
+  },
+  "refinement": {
+    "refinement_method": "quadratic"
+  },
+ "filter" : {
+   "filter_method": "median",
+   "filter_size": 3
+  },
+  "validation" : {
+    "validation_method": "cross_checking",
+    "cross_checking_threshold": 1,
+    "right_left_mode": "accurate"
+  }
+}

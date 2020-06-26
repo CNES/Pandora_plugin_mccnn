@@ -5,7 +5,8 @@ import os
 
 requirements = ['numpy',
                 'mc-cnn==0.0.1',
-                'pandora==0.2.0rc0']
+                'pandora==0.2.0rc0',
+                'nose2']
 
 
 def readme():
