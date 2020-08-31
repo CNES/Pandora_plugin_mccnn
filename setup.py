@@ -24,4 +24,5 @@ setup(name='pandora_plugin_mc_cnn',
           [pandora.plugin]
           pandora_plugin_mc_cnn = pandora_plugin_mc_cnn.plugin_mc_cnn:MCCNN
       """,
+      include_package_data=True,
       )
