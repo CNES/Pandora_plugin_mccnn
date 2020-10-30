@@ -78,38 +78,42 @@ class MCCNN(stereo.AbstractStereo):
         """
         print('MC-CNN similarity measure')
 
-    def compute_cost_volume(self, img_ref: xr.Dataset, img_sec: xr.Dataset, disp_min: int, disp_max: int, **cfg: Union[int, str, float]) -> xr.Dataset:
+    def compute_cost_volume(self, img_left: xr.Dataset, img_right: xr.Dataset, disp_min: int, disp_max: int
+                            ) -> xr.Dataset:
         """
         Computes the cost volume for a pair of images
 
-        :param img_ref: reference Dataset image
-        :type img_ref:
-        xarray.Dataset containing :
-            - im : 2D (row, col) xarray.DataArray
-        :param img_sec: secondary Dataset image
-        :type img_sec:
-        xarray.Dataset containing :
-            - im : 2D (row, col) xarray.DataArray
+        :param img_left: left Dataset image
+        :type img_left:
+            xarray.Dataset containing :
+                - im : 2D (row, col) xarray.DataArray
+                - msk : 2D (row, col) xarray.DataArray
+        :param img_right: right Dataset image
+        :type img_right:
+            xarray.Dataset containing :
+                - im : 2D (row, col) xarray.DataArray
+                - msk : 2D (row, col) xarray.DataArray
         :param disp_min: minimum disparity
         :type disp_min: int
         :param disp_max: maximum disparity
         :type disp_max: int
-        :param cfg: images configuration containing the mask convention : valid_pixels, no_data
-        :type cfg: dict
-        :return: the cost volume
-        :rtype: xarray.Dataset, with the data variables cost_volume 3D xarray.DataArray (row, col, disp)
+        :return: the cost volume dataset
+        :rtype:
+            xarray.Dataset, with the data variables:
+                - cost_volume 3D xarray.DataArray (row, col, disp)
+                - confidence_measure 3D xarray.DataArray (row, col, indicator)
         """
         if self._mc_cnn_arch == 'fast':
-            cv = run_mc_cnn_fast(img_ref, img_sec, disp_min, disp_max, self._model_path)
+            cv = run_mc_cnn_fast(img_left, img_right, disp_min, disp_max, self._model_path)
 
         # Accurate architecture
         else:
-            cv = run_mc_cnn_accurate(img_ref, img_sec, disp_min, disp_max, self._model_path)
+            cv = run_mc_cnn_accurate(img_left, img_right, disp_min, disp_max, self._model_path)
 
         # Allocate the xarray cost volume
         metadata = {"measure": 'mc_cnn_' + self._mc_cnn_arch, "subpixel": self._subpix,
                     "offset_row_col": int((self._window_size - 1) / 2), "window_size": self._window_size,
                     "type_measure": "min", "cmax": 1}
-        cv = self.allocate_costvolume(img_ref, self._subpix, disp_min, disp_max, self._window_size, metadata, cv)
+        cv = self.allocate_costvolume(img_left, self._subpix, disp_min, disp_max, self._window_size, metadata, cv)
 
         return cv

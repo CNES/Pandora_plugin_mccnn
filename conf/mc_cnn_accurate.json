@@ -1,7 +1,7 @@
 {
   "input" : {
-    "img_left" : "plugin_mc-cnn/tests/image/ref.png",
-    "img_right" : "plugin_mc-cnn/tests/image/sec.png",
+    "img_left" : "plugin_mc-cnn/tests/image/left_img.png",
+    "img_right" : "plugin_mc-cnn/tests/image/right_img.png",
     "disp_min" : -60,
     "disp_max" : 0
   },

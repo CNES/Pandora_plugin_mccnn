@@ -26,8 +26,8 @@ class TestPlugin(unittest.TestCase):
         Method called to prepare the test fixture
 
         """
-        self.disp_ref = rasterio.open('tests/image/disp_ref.tif').read(1)
-        self.disp_sec = rasterio.open('tests/image/disp_sec.tif').read(1)
+        self.disp_ref = rasterio.open('tests/image/disp_left.tif').read(1)
+        self.disp_sec = rasterio.open('tests/image/disp_right.tif').read(1)
 
     def error(self, data, gt, threshold, unknown_disparity=0):
         """
@@ -87,21 +87,21 @@ class TestPlugin(unittest.TestCase):
                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]), dtype=np.int16)
 
-        ref = xr.Dataset({'im': (['row', 'col'], data),
+        left = xr.Dataset({'im': (['row', 'col'], data),
                           'msk': (['row', 'col'], mask)},
-                         coords={'row': np.arange(data.shape[0]), 'col': np.arange(data.shape[1])})
-        ref.attrs['valid_pixels'] = 0
-        ref.attrs['no_data_mask'] = 1
+                          coords={'row': np.arange(data.shape[0]), 'col': np.arange(data.shape[1])})
+        left.attrs['valid_pixels'] = 0
+        left.attrs['no_data_mask'] = 1
 
         data = np.zeros((13, 13), dtype=np.float64)
         data += 0.1
         # Secondary mask contains valid pixels
         mask = np.zeros((13, 13), dtype=np.int16)
-        sec = xr.Dataset({'im': (['row', 'col'], data),
-                          'msk': (['row', 'col'], mask)},
-                         coords={'row': np.arange(data.shape[0]), 'col': np.arange(data.shape[1])})
-        sec.attrs['valid_pixels'] = 0
-        sec.attrs['no_data_mask'] = 1
+        right = xr.Dataset({'im': (['row', 'col'], data),
+                            'msk': (['row', 'col'], mask)},
+                           coords={'row': np.arange(data.shape[0]), 'col': np.arange(data.shape[1])})
+        right.attrs['valid_pixels'] = 0
+        right.attrs['no_data_mask'] = 1
 
         # Cost volume before invalidation, disparities = -1, 0, 1
         cv_before_invali = np.array([[[np.nan, -1., -1.],
@@ -131,13 +131,13 @@ class TestPlugin(unittest.TestCase):
 
         stereo_ = stereo.AbstractStereo(**{'stereo_method': 'mc_cnn', 'window_size': 11, 'subpix': 1,
                                            'mc_cnn_arch': 'fast', 'model_path': 'weights/mc_cnn_fast_mb_weights.pt'})
-        cv = stereo_.compute_cost_volume(img_ref=ref, img_sec=sec, disp_min=-1, disp_max=1)
+        cv = stereo_.compute_cost_volume(left, right, disp_min=-1, disp_max=1)
 
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
         np.testing.assert_array_equal(cv['cost_volume'].data, cv_before_invali)
 
         # Masked cost volume with pandora function
-        stereo_.cv_masked(ref, sec, cv, -1, 1)
+        stereo_.cv_masked(left, right, cv, -1, 1)
 
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
         np.testing.assert_array_equal(cv['cost_volume'].data, cv_ground_truth)
@@ -152,11 +152,11 @@ class TestPlugin(unittest.TestCase):
         # Reference mask contains valid pixels
         mask = np.zeros((13, 13), dtype=np.int16)
 
-        ref = xr.Dataset({'im': (['row', 'col'], data),
+        left = xr.Dataset({'im': (['row', 'col'], data),
                           'msk': (['row', 'col'], mask)},
-                         coords={'row': np.arange(data.shape[0]), 'col': np.arange(data.shape[1])})
-        ref.attrs['valid_pixels'] = 0
-        ref.attrs['no_data_mask'] = 1
+                          coords={'row': np.arange(data.shape[0]), 'col': np.arange(data.shape[1])})
+        left.attrs['valid_pixels'] = 0
+        left.attrs['no_data_mask'] = 1
 
         data = np.zeros((13, 13), dtype=np.float64)
         data += 0.1
@@ -174,11 +174,11 @@ class TestPlugin(unittest.TestCase):
                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]), dtype=np.int16)
 
-        sec = xr.Dataset({'im': (['row', 'col'], data),
-                          'msk': (['row', 'col'], mask)},
-                         coords={'row': np.arange(data.shape[0]), 'col': np.arange(data.shape[1])})
-        sec.attrs['valid_pixels'] = 0
-        sec.attrs['no_data_mask'] = 1
+        right = xr.Dataset({'im': (['row', 'col'], data),
+                            'msk': (['row', 'col'], mask)},
+                           coords={'row': np.arange(data.shape[0]), 'col': np.arange(data.shape[1])})
+        right.attrs['valid_pixels'] = 0
+        right.attrs['no_data_mask'] = 1
 
         # Cost volume before invalidation, disparities = -1, 0, 1
         cv_before_invali = np.array([[[np.nan, -1., -1.],
@@ -208,13 +208,13 @@ class TestPlugin(unittest.TestCase):
 
         stereo_ = stereo.AbstractStereo(**{'stereo_method': 'mc_cnn', 'window_size': 11, 'subpix': 1,
                                            'mc_cnn_arch': 'fast', 'model_path': 'weights/mc_cnn_fast_mb_weights.pt'})
-        cv = stereo_.compute_cost_volume(img_ref=ref, img_sec=sec, disp_min=-1, disp_max=1)
+        cv = stereo_.compute_cost_volume(left, right, disp_min=-1, disp_max=1)
 
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
         np.testing.assert_array_equal(cv['cost_volume'].data, cv_before_invali)
 
         # Masked cost volume with pandora function
-        stereo_.cv_masked(ref, sec, cv, -1, 1)
+        stereo_.cv_masked(left, right, cv, -1, 1)
 
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
         np.testing.assert_array_equal(cv['cost_volume'].data, cv_ground_truth)
