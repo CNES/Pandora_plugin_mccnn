@@ -39,10 +39,10 @@ class MCCNN(stereo.AbstractStereo):
         :type cfg: dictionary
         """
         self.cfg = self.check_config(**cfg)
-        self.mc_cnn_arch = str(self.cfg['mc_cnn_arch'])
-        self.model_path = str(self.cfg['model_path'])
-        self.window_size = self.cfg['window_size']
-        self.subpix = self.cfg['subpix']
+        self._mc_cnn_arch = str(self.cfg['mc_cnn_arch'])
+        self._model_path = str(self.cfg['model_path'])
+        self._window_size = self.cfg['window_size']
+        self._subpix = self.cfg['subpix']
 
     def check_config(self, **cfg: Union[int, str]) -> Dict[str, Union[int, str]]:
         """
@@ -78,80 +78,42 @@ class MCCNN(stereo.AbstractStereo):
         """
         print('MC-CNN similarity measure')
 
-    def compute_cost_volume(self, img_ref: xr.Dataset, img_sec: xr.Dataset, disp_min: int, disp_max: int, **cfg: Union[int, str, float]) -> xr.Dataset:
+    def compute_cost_volume(self, img_left: xr.Dataset, img_right: xr.Dataset, disp_min: int, disp_max: int
+                            ) -> xr.Dataset:
         """
         Computes the cost volume for a pair of images
 
-        :param img_ref: reference Dataset image
-        :type img_ref:
-        xarray.Dataset containing :
-            - im : 2D (row, col) xarray.DataArray
-        :param img_sec: secondary Dataset image
-        :type img_sec:
-        xarray.Dataset containing :
-            - im : 2D (row, col) xarray.DataArray
+        :param img_left: left Dataset image
+        :type img_left:
+            xarray.Dataset containing :
+                - im : 2D (row, col) xarray.DataArray
+                - msk : 2D (row, col) xarray.DataArray
+        :param img_right: right Dataset image
+        :type img_right:
+            xarray.Dataset containing :
+                - im : 2D (row, col) xarray.DataArray
+                - msk : 2D (row, col) xarray.DataArray
         :param disp_min: minimum disparity
         :type disp_min: int
         :param disp_max: maximum disparity
         :type disp_max: int
-        :param cfg: images configuration containing the mask convention : valid_pixels, no_data
-        :type cfg: dict
-        :return: the cost volume
-        :rtype: xarray.Dataset, with the data variables cost_volume 3D xarray.DataArray (row, col, disp)
+        :return: the cost volume dataset
+        :rtype:
+            xarray.Dataset, with the data variables:
+                - cost_volume 3D xarray.DataArray (row, col, disp)
+                - confidence_measure 3D xarray.DataArray (row, col, indicator)
         """
-        if self.mc_cnn_arch == 'fast':
-            cv = run_mc_cnn_fast(img_ref, img_sec, disp_min, disp_max, self.model_path)
+        if self._mc_cnn_arch == 'fast':
+            cv = run_mc_cnn_fast(img_left, img_right, disp_min, disp_max, self._model_path)
 
         # Accurate architecture
         else:
-            cv = run_mc_cnn_accurate(img_ref, img_sec, disp_min, disp_max, self.model_path)
-
-        # Invalid cost
-        cv = self.invalidates_cost(img_ref, img_sec, disp_min, disp_max, cv, **cfg)
+            cv = run_mc_cnn_accurate(img_left, img_right, disp_min, disp_max, self._model_path)
 
         # Allocate the xarray cost volume
-        metadata = {"measure": 'mc_cnn_' + self.mc_cnn_arch, "subpixel": self.subpix,
-                    "offset_row_col": int((self.window_size - 1) / 2), "window_size": self.window_size,
+        metadata = {"measure": 'mc_cnn_' + self._mc_cnn_arch, "subpixel": self._subpix,
+                    "offset_row_col": int((self._window_size - 1) / 2), "window_size": self._window_size,
                     "type_measure": "min", "cmax": 1}
-        cv = self.allocate_costvolume(img_ref, self.subpix, disp_min, disp_max, self.window_size, metadata, cv)
-
-        return cv
-
-    def invalidates_cost(self, img_ref: xr.Dataset, img_sec: xr.Dataset, disp_min: int, disp_max: int, cv: np.ndarray,
-                         **cfg: Union[int, str, float]) -> np.ndarray:
-        """
-        Invalidates pixels in the cost volume using reference and secondary mask image
-
-        :param img_ref: reference Dataset image
-        :type img_ref: xarray.Dataset containing :
-            - im : 2D (row, col) xarray.DataArray
-        :param img_sec: secondary Dataset image
-        :type img_sec: xarray.Dataset containing :
-            - im : 2D (row, col) xarray.DataArray
-        :param disp_min: minimum disparity
-        :type disp_min: int
-        :param disp_max: maximum disparity
-        :type disp_max: int
-        :param cv: cost volume
-        :type cv: 3D numpy array (row, col, disp)
-        :param cfg: images configuration containing the mask convention : valid_pixels, no_data
-        :type cfg: dict
-        :return: the cost volume with invalid costs = np.nan
-        :rtype: 3D numpy array (row, col, disp)
-        """
-        # Invalid invalid pixels : cost of invalid pixels will be = np.nan
-        offset = int((self.window_size - 1) / 2)
-        mask_ref, mask_sec = self.masks_dilatation(img_ref, img_sec, offset, self.window_size, self.subpix, cfg)
-        ny_, nx_ = mask_ref.shape
-        disparity_range = np.arange(disp_min, disp_max + 1)
-
-        for disp in disparity_range:
-            # range in the reference image
-            p = (max(0 - disp, 0), min(nx_ - disp, nx_))
-            # range in the secondary image
-            q = (max(0 + disp, 0), min(nx_ + disp, nx_))
-            d = int(disp - disp_min)
-
-            cv[:, p[0]:p[1], d] += mask_sec[0].data[:, q[0]:q[1]] + mask_ref.data[:, p[0]:p[1]]
+        cv = self.allocate_costvolume(img_left, self._subpix, disp_min, disp_max, self._window_size, metadata, cv)
 
         return cv

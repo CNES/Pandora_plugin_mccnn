@@ -13,6 +13,7 @@ import xarray as xr
 
 import pandora
 from pandora_plugin_mc_cnn.plugin_mc_cnn import MCCNN
+from pandora import stereo
 
 
 class TestPlugin(unittest.TestCase):
@@ -25,8 +26,8 @@ class TestPlugin(unittest.TestCase):
         Method called to prepare the test fixture
 
         """
-        self.disp_ref = rasterio.open('tests/image/disp_ref.tif').read(1)
-        self.disp_sec = rasterio.open('tests/image/disp_sec.tif').read(1)
+        self.disp_ref = rasterio.open('tests/image/disp_left.tif').read(1)
+        self.disp_sec = rasterio.open('tests/image/disp_right.tif').read(1)
 
     def error(self, data, gt, threshold, unknown_disparity=0):
         """
@@ -53,16 +54,16 @@ class TestPlugin(unittest.TestCase):
             pandora.main('tests/test_cfg_accurate.json', tmp_dir, verbose=False)
 
             # Check the reference disparity map
-            if self.error(rasterio.open(tmp_dir + '/ref_disparity.tif').read(1), self.disp_ref, 1) > 0.17:
+            if self.error(rasterio.open(tmp_dir + '/left_disparity.tif').read(1), self.disp_ref, 1) > 0.17:
                 raise AssertionError
 
             # Check the secondary disparity map
-            if self.error(-1 * rasterio.open(tmp_dir + '/sec_disparity.tif').read(1), self.disp_sec, 1) > 0.17:
+            if self.error(-1 * rasterio.open(tmp_dir + '/right_disparity.tif').read(1), self.disp_sec, 1) > 0.17:
                 raise AssertionError
 
     def test_invalidates_cost(self):
         """
-        Test invalidates_cost function : this function mask invalid pixels
+        Test the pipeline compute cost volume, and invalid cost with pandora function
 
         """
         # ------------ Test the method with a reference mask ( secondary mask contains valid pixels ) ------------
@@ -71,7 +72,7 @@ class TestPlugin(unittest.TestCase):
         # cfg['image']['no_data'] = 1
         # invalid_pixels all other values
         data = np.zeros((13, 13), dtype=np.float64)
-
+        data += 0.1
         mask = np.array(([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -86,51 +87,60 @@ class TestPlugin(unittest.TestCase):
                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]), dtype=np.int16)
 
-        ref = xr.Dataset({'im': (['row', 'col'], data),
+        left = xr.Dataset({'im': (['row', 'col'], data),
                           'msk': (['row', 'col'], mask)},
-                         coords={'row': np.arange(data.shape[0]), 'col': np.arange(data.shape[1])})
+                          coords={'row': np.arange(data.shape[0]), 'col': np.arange(data.shape[1])})
+        left.attrs['valid_pixels'] = 0
+        left.attrs['no_data_mask'] = 1
 
         data = np.zeros((13, 13), dtype=np.float64)
-
+        data += 0.1
         # Secondary mask contains valid pixels
         mask = np.zeros((13, 13), dtype=np.int16)
-        sec = xr.Dataset({'im': (['row', 'col'], data),
-                          'msk': (['row', 'col'], mask)},
-                         coords={'row': np.arange(data.shape[0]), 'col': np.arange(data.shape[1])})
+        right = xr.Dataset({'im': (['row', 'col'], data),
+                            'msk': (['row', 'col'], mask)},
+                           coords={'row': np.arange(data.shape[0]), 'col': np.arange(data.shape[1])})
+        right.attrs['valid_pixels'] = 0
+        right.attrs['no_data_mask'] = 1
 
         # Cost volume before invalidation, disparities = -1, 0, 1
-        cv_before_invali = np.array([[[np.nan, 0., 0.],
-                                      [0., 0., 0.],
-                                      [0., 0., np.nan]],
+        cv_before_invali = np.array([[[np.nan, -1., -1.],
+                                      [-1., -1., -1.],
+                                      [-1., -1., np.nan]],
 
-                                     [[np.nan, 0., 0.],
-                                      [0., 0., 0.],
-                                      [0., 0., np.nan]],
+                                     [[np.nan, -1., -1.],
+                                      [-1., -1., -1.],
+                                      [-1., -1., np.nan]],
 
-                                     [[np.nan, 0., 0.],
-                                      [0., 0., 0.],
-                                      [0., 0., np.nan]]], dtype=np.float32)
+                                     [[np.nan, -1., -1.],
+                                      [-1., -1., -1.],
+                                      [-1., -1., np.nan]]], dtype=np.float32)
 
         # Cost volume ground truth after invalidation
         cv_ground_truth = np.array([[[np.nan, np.nan, np.nan],
-                                      [0., 0., 0.],
-                                      [0., 0., np.nan]],
+                                     [-1., -1., -1.],
+                                     [-1., -1., np.nan]],
 
-                                     [[np.nan, 0., 0.],
-                                      [np.nan, np.nan, np.nan],
-                                      [np.nan, np.nan, np.nan]],
+                                    [[np.nan, -1., -1.],
+                                     [np.nan, np.nan, np.nan],
+                                     [np.nan, np.nan, np.nan]],
 
-                                     [[np.nan, 0., 0.],
-                                      [np.nan, np.nan, np.nan],
-                                      [np.nan, np.nan, np.nan]]], dtype=np.float32)
+                                    [[np.nan, -1., -1.],
+                                     [np.nan, np.nan, np.nan],
+                                     [np.nan, np.nan, np.nan]]], dtype=np.float32)
 
-        stereo_ = MCCNN(**{'stereo_method': 'mc_cnn', 'window_size': 11, 'subpix': 1, 'mc_cnn_arch': 'fast',
-                           'model_path': 'weights/mc_cnn_fast_mb_weights.pt'})
+        stereo_ = stereo.AbstractStereo(**{'stereo_method': 'mc_cnn', 'window_size': 11, 'subpix': 1,
+                                           'mc_cnn_arch': 'fast', 'model_path': 'weights/mc_cnn_fast_mb_weights.pt'})
+        cv = stereo_.compute_cost_volume(left, right, disp_min=-1, disp_max=1)
 
-        cv = stereo_.invalidates_cost(img_ref=ref, img_sec=sec, disp_min=-1, disp_max=1, cv=cv_before_invali,
-                                      **{'valid_pixels': 0, 'no_data': 1})
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
-        np.testing.assert_array_equal(cv, cv_ground_truth)
+        np.testing.assert_array_equal(cv['cost_volume'].data, cv_before_invali)
+
+        # Masked cost volume with pandora function
+        stereo_.cv_masked(left, right, cv, -1, 1)
+
+        # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
+        np.testing.assert_array_equal(cv['cost_volume'].data, cv_ground_truth)
 
         # ------------ Test the method with a secondary mask ( reference mask contains valid pixels ) ------------
         # Mask convention
@@ -138,16 +148,18 @@ class TestPlugin(unittest.TestCase):
         # cfg['image']['no_data'] = 1
         # invalid_pixels all other values
         data = np.zeros((13, 13), dtype=np.float64)
-
+        data += 0.1
         # Reference mask contains valid pixels
         mask = np.zeros((13, 13), dtype=np.int16)
 
-        ref = xr.Dataset({'im': (['row', 'col'], data),
+        left = xr.Dataset({'im': (['row', 'col'], data),
                           'msk': (['row', 'col'], mask)},
-                         coords={'row': np.arange(data.shape[0]), 'col': np.arange(data.shape[1])})
+                          coords={'row': np.arange(data.shape[0]), 'col': np.arange(data.shape[1])})
+        left.attrs['valid_pixels'] = 0
+        left.attrs['no_data_mask'] = 1
 
         data = np.zeros((13, 13), dtype=np.float64)
-
+        data += 0.1
         mask = np.array(([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -162,44 +174,50 @@ class TestPlugin(unittest.TestCase):
                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]), dtype=np.int16)
 
-        sec = xr.Dataset({'im': (['row', 'col'], data),
-                          'msk': (['row', 'col'], mask)},
-                         coords={'row': np.arange(data.shape[0]), 'col': np.arange(data.shape[1])})
+        right = xr.Dataset({'im': (['row', 'col'], data),
+                            'msk': (['row', 'col'], mask)},
+                           coords={'row': np.arange(data.shape[0]), 'col': np.arange(data.shape[1])})
+        right.attrs['valid_pixels'] = 0
+        right.attrs['no_data_mask'] = 1
 
         # Cost volume before invalidation, disparities = -1, 0, 1
-        cv_before_invali = np.array([[[np.nan, 0., 0.],
-                                      [0., 0., 0.],
-                                      [0., 0., np.nan]],
+        cv_before_invali = np.array([[[np.nan, -1., -1.],
+                                      [-1., -1., -1.],
+                                      [-1., -1., np.nan]],
 
-                                     [[np.nan, 0., 0.],
-                                      [0., 0., 0.],
-                                      [0., 0., np.nan]],
+                                     [[np.nan, -1., -1.],
+                                      [-1., -1., -1.],
+                                      [-1., -1., np.nan]],
 
-                                     [[np.nan, 0., 0.],
-                                      [0., 0., 0.],
-                                      [0., 0., np.nan]]], dtype=np.float32)
+                                     [[np.nan, -1., -1.],
+                                      [-1., -1., -1.],
+                                      [-1., -1., np.nan]]], dtype=np.float32)
 
         # Cost volume ground truth after invalidation
-        cv_ground_truth = np.array([[[np.nan,  np.nan,   0.],
-                                      [np.nan,     0.,   0.],
-                                      [0.,         0., np.nan]],
+        cv_ground_truth = np.array([[[np.nan,  np.nan,   -1.],
+                                     [np.nan,     -1.,   -1.],
+                                     [-1.,         -1., np.nan]],
 
-                                     [[np.nan,     0., np.nan],
-                                      [0.,     np.nan, np.nan],
-                                      [np.nan, np.nan, np.nan]],
+                                    [[np.nan,     -1., np.nan],
+                                     [-1.,     np.nan, np.nan],
+                                     [np.nan, np.nan, np.nan]],
 
-                                     [[np.nan,     0., np.nan],
-                                      [0.,     np.nan, np.nan],
-                                      [np.nan, np.nan, np.nan]]], dtype=np.float32)
+                                    [[np.nan,     -1., np.nan],
+                                     [-1.,     np.nan, np.nan],
+                                     [np.nan, np.nan, np.nan]]], dtype=np.float32)
 
-        stereo_ = MCCNN(**{'stereo_method': 'mc_cnn', 'window_size': 11, 'subpix': 1, 'mc_cnn_arch': 'fast',
-                           'model_path': 'weights/mc_cnn_fast_mb_weights.pt'})
-
-        cv = stereo_.invalidates_cost(img_ref=ref, img_sec=sec, disp_min=-1, disp_max=1, cv=cv_before_invali,
-                                      **{'valid_pixels': 0, 'no_data': 1})
+        stereo_ = stereo.AbstractStereo(**{'stereo_method': 'mc_cnn', 'window_size': 11, 'subpix': 1,
+                                           'mc_cnn_arch': 'fast', 'model_path': 'weights/mc_cnn_fast_mb_weights.pt'})
+        cv = stereo_.compute_cost_volume(left, right, disp_min=-1, disp_max=1)
 
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
-        np.testing.assert_array_equal(cv, cv_ground_truth)
+        np.testing.assert_array_equal(cv['cost_volume'].data, cv_before_invali)
+
+        # Masked cost volume with pandora function
+        stereo_.cv_masked(left, right, cv, -1, 1)
+
+        # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
+        np.testing.assert_array_equal(cv['cost_volume'].data, cv_ground_truth)
 
 
 if __name__ == '__main__':

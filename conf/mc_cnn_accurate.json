@@ -1,34 +1,38 @@
 {
   "input" : {
-    "img_ref" : "plugin_mc-cnn/test/image/ref.png",
-    "img_sec" : "plugin_mc-cnn/test/image/sec.png",
+    "img_left" : "plugin_mc-cnn/tests/image/left_img.png",
+    "img_right" : "plugin_mc-cnn/tests/image/right_img.png",
     "disp_min" : -60,
     "disp_max" : 0
   },
-  "invalid_disparity": "np.nan",
-  "stereo" : {
-    "stereo_method": "mc_cnn",
-    "subpix": 1,
-    "window_size": 11,
-    "mc_cnn_arch": "accurate",
-    "model_path": "plugin_mc-cnn/weights/mc_cnn_accurate_mb_weights.pt"
-  },
-  "aggregation" : {
-    "aggregation_method": "cbca"
-  },
-  "optimization" : {
-    "optimization_method": "none"
-  },
-  "refinement": {
-    "refinement_method": "quadratic"
-  },
- "filter" : {
-   "filter_method": "median",
-   "filter_size": 3
-  },
-  "validation" : {
-    "validation_method": "cross_checking",
-    "cross_checking_threshold": 1,
-    "right_left_mode": "accurate"
+  "pipeline": {
+    "right_disp_map": {
+	    "method": "accurate"
+    },
+    "stereo" : {
+        "stereo_method": "mc_cnn",
+        "subpix": 1,
+        "window_size": 11,
+        "mc_cnn_arch": "accurate",
+        "model_path": "plugin_mc-cnn/weights/mc_cnn_accurate_mb_weights.pt"
+    },
+    "aggregation" : {
+        "aggregation_method": "cbca"
+    },
+    "disparity": {
+      "disparity_method": "wta",
+      "invalid_disparity": "np.nan"
+    },
+    "refinement": {
+        "refinement_method": "quadratic"
+    },
+   "filter" : {
+       "filter_method": "median",
+       "filter_size": 3
+    },
+    "validation" : {
+        "validation_method": "cross_checking",
+        "cross_checking_threshold": 1
+    }
   }
 }
