@@ -5,7 +5,7 @@ import os
 
 requirements = ['numpy',
                 'mc-cnn==0.0.1',
-                'pandora>=0.3.0',
+                'pandora==0.3.*',
                 'nose2']
 
 
