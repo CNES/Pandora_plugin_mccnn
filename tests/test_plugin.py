@@ -12,8 +12,8 @@ import numpy as np
 import xarray as xr
 
 import pandora
-from pandora_plugin_mc_cnn.plugin_mc_cnn import MCCNN
 from pandora import stereo
+from pandora_plugin_mc_cnn.plugin_mc_cnn import MCCNN # pylint: disable=unused-import
 
 
 class TestPlugin(unittest.TestCase):
@@ -29,20 +29,21 @@ class TestPlugin(unittest.TestCase):
         self.disp_ref = rasterio.open('tests/image/disp_left.tif').read(1)
         self.disp_sec = rasterio.open('tests/image/disp_right.tif').read(1)
 
-    def error(self, data, gt, threshold, unknown_disparity=0):
+    @staticmethod
+    def error(data, gt, threshold, unknown_disparity=0):
         """
         Percentage of bad pixels whose error is > threshold
 
         """
-        row, col = data.shape
+        nb_row, nb_col = data.shape
         nb_error = 0
-        for r in range(row):
-            for c in range(col):
-                if gt[r, c] != unknown_disparity:
-                    if abs((data[r, c] + gt[r, c])) > threshold:
+        for row in range(nb_row):
+            for col in range(nb_col):
+                if gt[row, col] != unknown_disparity:
+                    if abs((data[row, col] + gt[row, col])) > threshold:
                         nb_error += 1
 
-        return nb_error / float(row * col)
+        return nb_error / float(nb_row * nb_col)
 
     def test_mc_cnn(self):
         """"
@@ -61,7 +62,8 @@ class TestPlugin(unittest.TestCase):
             if self.error(-1 * rasterio.open(tmp_dir + '/right_disparity.tif').read(1), self.disp_sec, 1) > 0.17:
                 raise AssertionError
 
-    def test_invalidates_cost(self):
+    @staticmethod
+    def test_invalidates_cost():
         """
         Test the pipeline compute cost volume, and invalid cost with pandora function
 

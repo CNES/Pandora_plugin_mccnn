@@ -6,10 +6,9 @@
 This module contains all functions to calculate the cost volume with mc-cnn networks
 """
 
-import numpy as np
-from json_checker import Checker, And
 from typing import Dict, Union
 import os
+from json_checker import Checker, And
 import xarray as xr
 
 from pandora.stereo import stereo
@@ -60,11 +59,11 @@ class MCCNN(stereo.AbstractStereo):
             cfg['subpix'] = self._SUBPIX
 
         schema = {
-            "stereo_method": And(str, lambda x: x == 'mc_cnn'),
-            "window_size": And(int, lambda x: x == 11),
-            "subpix": And(int, lambda x: x == 1),
-            "mc_cnn_arch": And(str, lambda x: x == 'fast' or x == 'accurate'),
-            "model_path": And(str, lambda x: os.path.exists(x))
+            'stereo_method': And(str, lambda x: x == 'mc_cnn'),
+            'window_size': And(int, lambda x: x == 11),
+            'subpix': And(int, lambda x: x == 1),
+            'mc_cnn_arch': And(str, lambda x: x in ('fast', 'accurate')),
+            'model_path': And(str, lambda x: os.path.exists(x))
         }
 
         checker = Checker(schema)
@@ -111,9 +110,9 @@ class MCCNN(stereo.AbstractStereo):
             cv = run_mc_cnn_accurate(img_left, img_right, disp_min, disp_max, self._model_path)
 
         # Allocate the xarray cost volume
-        metadata = {"measure": 'mc_cnn_' + self._mc_cnn_arch, "subpixel": self._subpix,
-                    "offset_row_col": int((self._window_size - 1) / 2), "window_size": self._window_size,
-                    "type_measure": "min", "cmax": 1}
+        metadata = {'measure': 'mc_cnn_' + self._mc_cnn_arch, 'subpixel': self._subpix,
+                    'offset_row_col': int((self._window_size - 1) / 2), 'window_size': self._window_size,
+                    'type_measure': 'min', 'cmax': 1}
         cv = self.allocate_costvolume(img_left, self._subpix, disp_min, disp_max, self._window_size, metadata, cv)
 
         return cv
