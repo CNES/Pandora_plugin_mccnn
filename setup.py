@@ -1,6 +1,10 @@
+"""
+This module contains the required libraries and softwares allowing to execute the software,
+and setup elements to configure and identify the software.
+"""
+
+from codecs import open as copen
 from setuptools import setup, find_packages
-from codecs import open
-import os
 
 
 requirements = ['numpy',
@@ -10,8 +14,8 @@ requirements = ['numpy',
 
 
 def readme():
-    with open("README.md", "r", "utf-8") as f:
-        return f.read()
+    with copen('README.md', 'r', 'utf-8') as fstream:
+        return fstream.read()
 
 
 setup(name='pandora_plugin_mc_cnn',

@@ -6,6 +6,7 @@
 
 ### Added
 
+- Pretrained neural networks on data fusion contest.
 - A changelog file. 
 
 ### Changed
