@@ -33,9 +33,6 @@
     "validation" : {
         "validation_method": "cross_checking",
         "cross_checking_threshold": 1
-    },
-    "resize": {
-	    "border_disparity": "np.nan"
     }
   }
 }
