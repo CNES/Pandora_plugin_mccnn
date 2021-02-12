@@ -10,6 +10,7 @@ from typing import Dict, Union
 import os
 from json_checker import Checker, And
 import xarray as xr
+import numpy as np
 
 from pandora.stereo import stereo
 from mc_cnn.run import run_mc_cnn_fast, run_mc_cnn_accurate
@@ -102,17 +103,42 @@ class MCCNN(stereo.AbstractStereo):
                 - cost_volume 3D xarray.DataArray (row, col, disp)
                 - confidence_measure 3D xarray.DataArray (row, col, indicator)
         """
-        if self._mc_cnn_arch == 'fast':
-            cv = run_mc_cnn_fast(img_left, img_right, disp_min, disp_max, self._model_path)
 
-        # Accurate architecture
+        # Disparity range
+        if self._subpix == 1:
+            disparity_range = np.arange(disp_min, disp_max + 1)
         else:
-            cv = run_mc_cnn_accurate(img_left, img_right, disp_min, disp_max, self._model_path)
+            disparity_range = np.arange(disp_min, disp_max, step=1 / float(self._subpix))
+            disparity_range = np.append(disparity_range, [disp_max])
+
+        offset_row_col = int((self._window_size - 1) / 2)
+        cv = np.zeros((img_right['im'].shape[0], img_left['im'].shape[1],
+                       len(disparity_range)), dtype=np.float32)
+        cv += np.nan
+
+        # If offset, do not consider border position for cost computation
+        if offset_row_col != 0:
+            # Fast architecture
+            if self._mc_cnn_arch == 'fast':
+                cv[offset_row_col: -offset_row_col, offset_row_col:-offset_row_col, :] = run_mc_cnn_fast(img_left,
+                                                                    img_right, disp_min, disp_max, self._model_path)
+            # Accurate architecture
+            else:
+                cv[offset_row_col: -offset_row_col, offset_row_col:-offset_row_col, :] = run_mc_cnn_accurate(img_left,
+                                                                    img_right, disp_min, disp_max, self._model_path)
+        else:
+            # Fast architecture
+            if self._mc_cnn_arch == 'fast':
+                cv = run_mc_cnn_fast(img_left, img_right, disp_min, disp_max, self._model_path)
+            # Accurate architecture
+            else:
+                cv = run_mc_cnn_accurate(img_left, img_right, disp_min, disp_max, self._model_path)
 
         # Allocate the xarray cost volume
         metadata = {'measure': 'mc_cnn_' + self._mc_cnn_arch, 'subpixel': self._subpix,
                     'offset_row_col': int((self._window_size - 1) / 2), 'window_size': self._window_size,
                     'type_measure': 'min', 'cmax': 1}
+
         cv = self.allocate_costvolume(img_left, self._subpix, disp_min, disp_max, self._window_size, metadata, cv)
 
         return cv

@@ -9,7 +9,7 @@ from setuptools import setup, find_packages
 
 requirements = ['numpy',
                 'mc-cnn==0.0.1',
-                'pandora==0.3.*',
+                'pandora==0.4.*',
                 'nose2']
 
 
