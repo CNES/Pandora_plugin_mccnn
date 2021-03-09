@@ -12,7 +12,7 @@ import numpy as np
 import xarray as xr
 
 import pandora
-from pandora import stereo
+from pandora import matching_cost
 from pandora_plugin_mc_cnn.plugin_mc_cnn import MCCNN # pylint: disable=unused-import
 
 
@@ -274,8 +274,8 @@ class TestPlugin(unittest.TestCase):
                                       [np.nan, np.nan, np.nan],
                                       [np.nan, np.nan, np.nan],
                                       [np.nan, np.nan, np.nan],
-                                      [np.nan, np.nan, np.nan]]]
-                                    , dtype=np.float32)
+                                      [np.nan, np.nan, np.nan]]],
+                                    dtype=np.float32)
 
         # Cost volume ground truth after invalidation
         cv_ground_truth = np.array([[[np.nan, np.nan, np.nan],
@@ -446,18 +446,19 @@ class TestPlugin(unittest.TestCase):
                                      [np.nan, np.nan, np.nan],
                                      [np.nan, np.nan, np.nan],
                                      [np.nan, np.nan, np.nan],
-                                     [np.nan, np.nan, np.nan]]]
-                                   , dtype=np.float32)
+                                     [np.nan, np.nan, np.nan]]],
+                                   dtype=np.float32)
 
-        stereo_ = stereo.AbstractStereo(**{'stereo_method': 'mc_cnn', 'window_size': 11, 'subpix': 1,
-                                           'mc_cnn_arch': 'fast', 'model_path': 'weights/mc_cnn_fast_mb_weights.pt'})
-        cv = stereo_.compute_cost_volume(left, right, disp_min=-1, disp_max=1)
+        matching_cost_ = matching_cost.AbstractMatchingCost(**{'matching_cost_method': 'mc_cnn', 'window_size': 11,
+                                                               'subpix': 1, 'mc_cnn_arch': 'fast',
+                                                               'model_path': 'weights/mc_cnn_fast_mb_weights.pt'})
+        cv = matching_cost_.compute_cost_volume(left, right, disp_min=-1, disp_max=1)
 
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
         np.testing.assert_array_equal(cv['cost_volume'].data, cv_before_invali)
 
         # Masked cost volume with pandora function
-        stereo_.cv_masked(left, right, cv, -1, 1)
+        matching_cost_.cv_masked(left, right, cv, -1, 1)
         print(cv['cost_volume'].data)
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
         np.testing.assert_array_equal(cv['cost_volume'].data, cv_ground_truth)
@@ -849,15 +850,16 @@ class TestPlugin(unittest.TestCase):
                                      [np.nan, np.nan, np.nan],
                                      [np.nan, np.nan, np.nan]]], dtype=np.float32)
 
-        stereo_ = stereo.AbstractStereo(**{'stereo_method': 'mc_cnn', 'window_size': 11, 'subpix': 1,
-                                           'mc_cnn_arch': 'fast', 'model_path': 'weights/mc_cnn_fast_mb_weights.pt'})
-        cv = stereo_.compute_cost_volume(left, right, disp_min=-1, disp_max=1)
+        matching_cost_ = matching_cost.AbstractMatchingCost(**{'matching_cost_method': 'mc_cnn', 'window_size': 11,
+                                                               'subpix': 1, 'mc_cnn_arch': 'fast',
+                                                               'model_path': 'weights/mc_cnn_fast_mb_weights.pt'})
+        cv = matching_cost_.compute_cost_volume(left, right, disp_min=-1, disp_max=1)
 
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
         np.testing.assert_array_equal(cv['cost_volume'].data, cv_before_invali)
 
         # Masked cost volume with pandora function
-        stereo_.cv_masked(left, right, cv, -1, 1)
+        matching_cost_.cv_masked(left, right, cv, -1, 1)
 
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
         np.testing.assert_array_equal(cv['cost_volume'].data, cv_ground_truth)
