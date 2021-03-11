@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 0.0.5 (March 2021)
+
+### Changed
+
+- Update dependency to Pandora 0.5.0 version. [#16]
+
+### Added
+
+## 0.0.4 (March 2021)
+
 ### Changed
 
 - Update dependency to Pandora 0.4.0 version. [#13]
