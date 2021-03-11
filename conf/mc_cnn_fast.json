@@ -9,8 +9,8 @@
     "right_disp_map": {
 	    "method": "accurate"
     },
-    "stereo" : {
-        "stereo_method": "mc_cnn",
+    "matching_cost" : {
+        "matching_cost": "mc_cnn",
         "subpix": 1,
         "window_size": 11,
         "mc_cnn_arch": "fast",

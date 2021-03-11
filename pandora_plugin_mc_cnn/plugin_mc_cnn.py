@@ -12,12 +12,12 @@ from json_checker import Checker, And
 import xarray as xr
 import numpy as np
 
-from pandora.stereo import stereo
+from pandora.matching_cost import matching_cost
 from mc_cnn.run import run_mc_cnn_fast, run_mc_cnn_accurate
 
 
-@stereo.AbstractStereo.register_subclass('mc_cnn')
-class MCCNN(stereo.AbstractStereo):
+@matching_cost.AbstractMatchingCost.register_subclass('mc_cnn')
+class MCCNN(matching_cost.AbstractMatchingCost):
     """
 
     MCCNN class is a plugin that create a cost volume by calling the McCNN library: a neural network that produce a
@@ -34,7 +34,7 @@ class MCCNN(stereo.AbstractStereo):
     def __init__(self, **cfg: Union[int, str]):
         """
 
-        :param cfg: optional configuration, {'stereo_method': value, 'mc_cnn_arch': 'fast' | 'accurate',
+        :param cfg: optional configuration, {'matching_cost_method': value, 'mc_cnn_arch': 'fast' | 'accurate',
         'window_size': value, 'subpix': value, 'model_path' :value}
         :type cfg: dictionary
         """
@@ -48,9 +48,9 @@ class MCCNN(stereo.AbstractStereo):
         """
         Add default values to the dictionary if there are missing elements and check if the dictionary is correct
 
-        :param cfg: stereo configuration
+        :param cfg: matching_cost configuration
         :type cfg: dict
-        :return cfg: stereo configuration updated
+        :return cfg: matching_cost configuration updated
         :rtype: dict
         """
         # Give the default value if the required element is not in the configuration
@@ -60,7 +60,7 @@ class MCCNN(stereo.AbstractStereo):
             cfg['subpix'] = self._SUBPIX
 
         schema = {
-            'stereo_method': And(str, lambda x: x == 'mc_cnn'),
+            'matching_cost_method': And(str, lambda x: x == 'mc_cnn'),
             'window_size': And(int, lambda x: x == 11),
             'subpix': And(int, lambda x: x == 1),
             'mc_cnn_arch': And(str, lambda x: x in ('fast', 'accurate')),
