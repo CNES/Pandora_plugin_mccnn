@@ -94,6 +94,8 @@ class TestPlugin(unittest.TestCase):
                           coords={'row': np.arange(data.shape[0]), 'col': np.arange(data.shape[1])})
         left.attrs['valid_pixels'] = 0
         left.attrs['no_data_mask'] = 1
+        left.attrs['crs'] = None
+        left.attrs['transform'] = None
 
         data = np.zeros((13, 13), dtype=np.float64)
         data += 0.1
@@ -478,6 +480,8 @@ class TestPlugin(unittest.TestCase):
                           coords={'row': np.arange(data.shape[0]), 'col': np.arange(data.shape[1])})
         left.attrs['valid_pixels'] = 0
         left.attrs['no_data_mask'] = 1
+        left.attrs['crs'] = None
+        left.attrs['transform'] = None
 
         data = np.zeros((13, 13), dtype=np.float64)
         data += 0.1
