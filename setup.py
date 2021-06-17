@@ -31,7 +31,9 @@ from setuptools import setup, find_packages
 REQUIREMENTS = ['numpy',
                 'mc-cnn==0.0.1',
                 'pandora==1.0.*',
-                'nose2']
+                'nose2',
+                'xarray',
+                'json-checker']
 
 
 def readme():
@@ -43,6 +45,11 @@ setup(name='pandora_plugin_mc_cnn',
       version='x.y.z',
       description='Pandora plugin to create the cost volume with the neural network mc-cnn',
       long_description=readme(),
+      long_description_content_type='text/markdown',
+      url='https://github.com/CNES/Pandora_plugin_mccnn',
+      author='CNES',
+      author_email='myriam.cournet@cnes.fr',
+      license='Apache License 2.0',
       packages=find_packages(),
       install_requires=REQUIREMENTS,
       entry_points="""
