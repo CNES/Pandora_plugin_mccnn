@@ -35,9 +35,18 @@ REQUIREMENTS = ['numpy',
                 'xarray',
                 'json-checker']
 
+REQUIREMENTS_DEV = {
+    "dev": [
+        "nose2",
+        "pylint",
+        "pre-commit",
+        "black",
+    ]
+}
+
 
 def readme():
-    with copen('README.md', 'r', 'utf-8') as fstream:
+    with copen("README.md", "r", "utf-8") as fstream:
         return fstream.read()
 
 
@@ -52,6 +61,7 @@ setup(name='pandora_plugin_mc_cnn',
       license='Apache License 2.0',
       packages=find_packages(),
       install_requires=REQUIREMENTS,
+      extras_require=REQUIREMENTS_DEV,
       entry_points="""
           [pandora.plugin]
           pandora_plugin_mc_cnn = pandora_plugin_mc_cnn.plugin_mc_cnn:MCCNN
