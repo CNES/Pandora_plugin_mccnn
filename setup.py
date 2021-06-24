@@ -27,6 +27,14 @@ and setup elements to configure and identify the software.
 from codecs import open as copen
 from setuptools import setup, find_packages
 
+cmdclass = {}
+try:
+    from sphinx.setup_command import BuildDoc
+
+    cmdclass["build_sphinx"] = BuildDoc
+except ImportError:
+    print("WARNING: sphinx not available. Doc cannot be built")
+
 
 REQUIREMENTS = ["numpy", "mc-cnn==0.0.1", "pandora==1.0.*", "nose2", "xarray", "json-checker"]
 
@@ -36,7 +44,8 @@ REQUIREMENTS_DEV = {
         "pylint",
         "pre-commit",
         "black",
-    ]
+    ],
+    "docs": ["sphinx", "sphinx_rtd_theme", "sphinx_autoapi"],
 }
 
 
@@ -63,4 +72,12 @@ setup(
           pandora_plugin_mc_cnn = pandora_plugin_mc_cnn.plugin_mc_cnn:MCCNN
       """,
     include_package_data=True,
+    cmdclass=cmdclass,
+    command_options={
+        "build_sphinx": {
+            "build_dir": ("setup.py", "doc/build/"),
+            "source_dir": ("setup.py", "doc/source/"),
+            "warning_is_error": ("setup.py", True),
+        }
+    },
 )
