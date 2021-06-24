@@ -45,6 +45,15 @@ Pretrained weights for mc-cnn fast and mc-cnn accurate neural networks are avail
 -  mc_cnn_fast_mb_weights.pt and mc_cnn_accurate_mb_weights.pt are the weights of the pretrained networks on the Middlebury dataset [[Middlebury]](#Middlebury)
 -  mc_cnn_fast_data_fusion_contest.pt and mc_cnn_accurate_data_fusion_contest.pt are the weights of the pretrained networks on the Data Fusion Contest dataset [[DFC]](#DFC)
 
+To download the pretrained weights:
+
+```bash
+wget https://raw.githubusercontent.com/CNES/Pandora_plugin_mccnn/master/weights/mc_cnn_fast_mb_weights.pt
+wget https://raw.githubusercontent.com/CNES/Pandora_plugin_mccnn/master/weights/mc_cnn_fast_data_fusion_contest.pt
+wget https://raw.githubusercontent.com/CNES/Pandora_plugin_mccnn/master/weights/mc_cnn_accurate_mb_weights.pt
+wget https://raw.githubusercontent.com/CNES/Pandora_plugin_mccnn/master/weights/mc_cnn_accurate_data_fusion_contest.pt
+```
+
 The figures below show disparity maps produced on mountain, and desert areas generated with the Census and MCCNN similarity measures :
 
 
