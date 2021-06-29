@@ -56,12 +56,10 @@ wget https://raw.githubusercontent.com/CNES/Pandora_plugin_mccnn/master/weights/
 
 The figures below show disparity maps produced on mountain, and desert areas generated with the Census and MCCNN similarity measures :
 
-
-|                Left image                      |        Left disparity map using Census measure       | Left disparity map using mc-cnn fast measure pretrained on middlebury dataset | Left disparity map using mc-cnn fast measure pretrained on the Data Fusion Contest dataset |
-| ---------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| ![mountain_img](data_samples/mountain_img.png) | ![mountain_census](data_samples/mountain_census.png) | ![mountain_mid](data_samples/mountain_mccnn_fast_middlebury.png)              | ![mountain_dfc](data_samples/mountain_mccnn_fast_data_fusion_contest.png)                  |
-| ![desert_img](data_samples/desert_img.png)     | ![desert_census](data_samples/desert_census.png)     | ![desert_mid](data_samples/desert_mccnn_fast_middlebury.png)                  | ![desert_dfc](data_samples/desert_mccnn_fast_data_fusion_contest.png)                      |
-
+|                Left image                                                                  |        Left disparity map using Census measure                                             | Left disparity map using mc-cnn fast pretrained on Middlebury  | Left disparity map using mc-cnn fast pretrained DFC              |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| ![mountain_img](data_samples/mountain_img.png)                                             | ![mountain_census](data_samples/mountain_census.png)                                       | ![mountain_mid](data_samples/mountain_mccnn_fast_middlebury.png)       | ![mountain_dfc](data_samples/mountain_mccnn_fast_data_fusion_contest.png)|
+| ![desert_img](data_samples/desert_img.png)                                                 | ![desert_census](data_samples/desert_census.png)                                           | ![desert_mid](data_samples/desert_mccnn_fast_middlebury.png)           | ![desert_dfc](data_samples/desert_mccnn_fast_data_fusion_contest.png)    |
 
 ## Related
 
