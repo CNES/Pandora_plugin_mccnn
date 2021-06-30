@@ -68,7 +68,7 @@ The figures below show disparity maps produced on mountain, and desert areas gen
 
 ## References
 
-Please cite the following paper when using Pandora and pandora_plugin_libsgm:   
+Please cite the following paper when using Pandora and pandora_plugin_mccnn:   
 *Cournet, M., Sarrazin, E., Dumas, L., Michel, J., Guinet, J., Youssefi, D., Defonte, V., Fardet, Q., 2020. Ground-truth generation and disparity estimation for optical satellite imagery. ISPRS - International Archives of the Photogrammetry, Remote Sensing and Spatial Information Sciences.*
 
 <a id="MCCNN">[MCCNN]</a> 
