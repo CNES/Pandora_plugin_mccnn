@@ -57,6 +57,6 @@ Related
 References
 ##########
 
-Please cite the following paper when using Pandora and pandora_plugin_libsgm:
+Please cite the following paper when using Pandora and pandora_plugin_mccnn:
 
 *Cournet, M., Sarrazin, E., Dumas, L., Michel, J., Guinet, J., Youssefi, D., Defonte, V., Fardet, Q., 2020. Ground-truth generation and disparity estimation for optical satellite imagery. ISPRS - International Archives of the Photogrammetry, Remote Sensing and Spatial Information Sciences.*
