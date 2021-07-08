@@ -1,4 +1,4 @@
-name: MC-CNN CI
+name: Plugin MC-CNN CI
 on: [push]
 
 jobs:
