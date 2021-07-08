@@ -27,16 +27,28 @@ and setup elements to configure and identify the software.
 from codecs import open as copen
 from setuptools import setup, find_packages
 
+cmdclass = {}
+try:
+    from sphinx.setup_command import BuildDoc
 
-REQUIREMENTS = ["numpy", "mc-cnn==0.0.1", "pandora==1.0.*", "nose2", "xarray", "json-checker"]
+    cmdclass["build_sphinx"] = BuildDoc
+except ImportError:
+    print("WARNING: sphinx not available. Doc cannot be built")
+
+
+REQUIREMENTS = ["numpy", "mc-cnn==0.0.1", "pandora==1.0.*", "xarray", "json-checker"]
+
+SETUP_REQUIREMENTS = ["setuptools-scm"]
 
 REQUIREMENTS_DEV = {
     "dev": [
-        "nose2",
+        "pytest",
+        "pytest-cov",
         "pylint",
         "pre-commit",
         "black",
-    ]
+    ],
+    "docs": ["sphinx", "sphinx_rtd_theme", "sphinx_autoapi"],
 }
 
 
@@ -47,7 +59,7 @@ def readme():
 
 setup(
     name="pandora_plugin_mc_cnn",
-    version="x.y.z",
+    use_scm_version=True,
     description="Pandora plugin to create the cost volume with the neural network mc-cnn",
     long_description=readme(),
     long_description_content_type="text/markdown",
@@ -63,4 +75,12 @@ setup(
           pandora_plugin_mc_cnn = pandora_plugin_mc_cnn.plugin_mc_cnn:MCCNN
       """,
     include_package_data=True,
+    cmdclass=cmdclass,
+    command_options={
+        "build_sphinx": {
+            "build_dir": ("setup.py", "doc/build/"),
+            "source_dir": ("setup.py", "doc/source/"),
+            "warning_is_error": ("setup.py", True),
+        }
+    },
 )
