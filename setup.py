@@ -36,7 +36,7 @@ except ImportError:
     print("WARNING: sphinx not available. Doc cannot be built")
 
 
-REQUIREMENTS = ["numpy", "mc-cnn==0.0.1", "pandora==1.0.*", "xarray", "json-checker"]
+REQUIREMENTS = ["numpy", "MCCNN==1.0.0", "pandora>=1.0.0", "xarray", "json-checker"]
 
 SETUP_REQUIREMENTS = ["setuptools-scm"]
 
