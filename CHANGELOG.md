@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 1.0.0 (July 2021)
+
+### Added
+
+- Udpate dependency to MCCNN 1.0.0
+
 ## 0.0.6 (March 2021)
 
 ### Changed
