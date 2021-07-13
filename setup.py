@@ -58,7 +58,7 @@ def readme():
 
 
 setup(
-    name="pandora_plugin_mc_cnn",
+    name="pandora_plugin_mccnn",
     use_scm_version=True,
     description="Pandora plugin to create the cost volume with the neural network mc-cnn",
     long_description=readme(),
