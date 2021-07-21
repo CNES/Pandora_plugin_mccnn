@@ -36,7 +36,7 @@ except ImportError:
     print("WARNING: sphinx not available. Doc cannot be built")
 
 
-REQUIREMENTS = ["numpy", "mc-cnn==0.0.1", "pandora==1.0.*", "xarray", "json-checker"]
+REQUIREMENTS = ["numpy", "MCCNN==1.0.0", "pandora>=1.0.0", "xarray", "json-checker"]
 
 SETUP_REQUIREMENTS = ["setuptools-scm"]
 
@@ -58,7 +58,7 @@ def readme():
 
 
 setup(
-    name="pandora_plugin_mc_cnn",
+    name="pandora_plugin_mccnn",
     use_scm_version=True,
     description="Pandora plugin to create the cost volume with the neural network mc-cnn",
     long_description=readme(),
@@ -68,6 +68,7 @@ setup(
     author_email="myriam.cournet@cnes.fr",
     license="Apache License 2.0",
     packages=find_packages(),
+    setup_requires=SETUP_REQUIREMENTS,
     install_requires=REQUIREMENTS,
     extras_require=REQUIREMENTS_DEV,
     entry_points="""
