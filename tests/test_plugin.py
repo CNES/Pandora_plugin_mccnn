@@ -3,7 +3,7 @@
 #
 # Copyright (c) 2021 Centre National d'Etudes Spatiales (CNES).
 #
-# This file is part of PANDORA
+# This file is part of Pandora plugin MC-CNN
 #
 #     https://github.com/CNES/Pandora_plugin_mccnn
 #
