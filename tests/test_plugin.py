@@ -551,14 +551,13 @@ class TestPlugin(unittest.TestCase):
         cv = matching_cost_.compute_cost_volume(left, right, disp_min=-1, disp_max=1)
 
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
-        np.testing.assert_array_equal(cv["cost_volume"].data, cv_before_invali)
+        np.testing.assert_allclose(cv["cost_volume"].data, cv_before_invali, rtol=1e-06)
 
         # Masked cost volume with pandora function
         matching_cost_.cv_masked(left, right, cv, -1, 1)
         print(cv["cost_volume"].data)
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
-        np.testing.assert_array_equal(cv["cost_volume"].data, cv_ground_truth)
-
+        np.testing.assert_allclose(cv["cost_volume"].data, cv_ground_truth, rtol=1e-06)
         # ------------ Test the method with a secondary mask ( reference mask contains valid pixels ) ------------
         # Mask convention
         # cfg['image']['valid_pixels'] = 0
@@ -1024,13 +1023,13 @@ class TestPlugin(unittest.TestCase):
         cv = matching_cost_.compute_cost_volume(left, right, disp_min=-1, disp_max=1)
 
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
-        np.testing.assert_array_equal(cv["cost_volume"].data, cv_before_invali)
+        np.testing.assert_allclose(cv["cost_volume"].data, cv_before_invali, rtol=1e-06)
 
         # Masked cost volume with pandora function
         matching_cost_.cv_masked(left, right, cv, -1, 1)
 
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
-        np.testing.assert_array_equal(cv["cost_volume"].data, cv_ground_truth)
+        np.testing.assert_allclose(cv["cost_volume"].data, cv_ground_truth, rtol=1e-06)
 
 
 if __name__ == "__main__":
