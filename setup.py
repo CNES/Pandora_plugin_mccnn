@@ -51,5 +51,5 @@ setup(
             "source_dir": ("setup.py", "doc/source/"),
             "warning_is_error": ("setup.py", True),
         }
-    }
+    },
 )
