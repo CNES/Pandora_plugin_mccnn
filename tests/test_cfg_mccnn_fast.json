@@ -13,8 +13,7 @@
         "matching_cost_method": "mc_cnn",
         "subpix": 1,
         "window_size": 11,
-        "mc_cnn_arch": "accurate",
-        "model_path": "weights/mc_cnn_accurate_mb_weights.pt"
+        "model_path": "weights/mc_cnn_fast_mb_weights.pt"
     },
     "aggregation" : {
         "aggregation_method": "cbca"
