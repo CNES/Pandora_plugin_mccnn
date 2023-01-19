@@ -42,8 +42,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
 
     """
 
-    # Type of mc_cnn architecture : fast or accurate
-    _MC_CNN_ARCH = None
     _WINDOW_SIZE = 11
     _SUBPIX = 1
     # Path to the pretrained model
@@ -52,7 +50,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
     def __init__(self, **cfg: Union[int, str]):
         """
 
-        :param cfg: optional configuration, {'matching_cost_method': value, 'mc_cnn_arch': 'fast' | 'accurate',
+        :param cfg: optional configuration, {'matching_cost_method': value,
         'window_size': value, 'subpix': value, 'model_path' :value}
         :type cfg: dictionary
         """
