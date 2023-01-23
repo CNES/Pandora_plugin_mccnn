@@ -30,7 +30,7 @@ import xarray as xr
 import numpy as np
 
 from pandora.matching_cost import matching_cost
-from mc_cnn.run import run_mc_cnn_fast, run_mc_cnn_accurate
+from mc_cnn.run import run_mc_cnn_fast
 
 
 @matching_cost.AbstractMatchingCost.register_subclass("mc_cnn")
@@ -42,8 +42,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
 
     """
 
-    # Type of mc_cnn architecture : fast or accurate
-    _MC_CNN_ARCH = None
     _WINDOW_SIZE = 11
     _SUBPIX = 1
     # Path to the pretrained model
@@ -52,12 +50,11 @@ class MCCNN(matching_cost.AbstractMatchingCost):
     def __init__(self, **cfg: Union[int, str]):
         """
 
-        :param cfg: optional configuration, {'matching_cost_method': value, 'mc_cnn_arch': 'fast' | 'accurate',
+        :param cfg: optional configuration, {'matching_cost_method': value,
         'window_size': value, 'subpix': value, 'model_path' :value}
         :type cfg: dictionary
         """
         self.cfg = self.check_config(**cfg)
-        self._mc_cnn_arch = str(self.cfg["mc_cnn_arch"])
         self._model_path = str(self.cfg["model_path"])
         self._window_size = self.cfg["window_size"]
         self._subpix = self.cfg["subpix"]
@@ -81,7 +78,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
             "matching_cost_method": And(str, lambda x: x == "mc_cnn"),
             "window_size": And(int, lambda x: x == 11),
             "subpix": And(int, lambda x: x == 1),
-            "mc_cnn_arch": And(str, lambda x: x in ("fast", "accurate")),
             "model_path": And(str, lambda x: os.path.exists(x)),
         }
 
@@ -136,27 +132,15 @@ class MCCNN(matching_cost.AbstractMatchingCost):
 
         # If offset, do not consider border position for cost computation
         if offset_row_col != 0:
-            # Fast architecture
-            if self._mc_cnn_arch == "fast":
-                cv[offset_row_col:-offset_row_col, offset_row_col:-offset_row_col, :] = run_mc_cnn_fast(
-                    img_left, img_right, disp_min, disp_max, self._model_path
-                )
-            # Accurate architecture
-            else:
-                cv[offset_row_col:-offset_row_col, offset_row_col:-offset_row_col, :] = run_mc_cnn_accurate(
-                    img_left, img_right, disp_min, disp_max, self._model_path
-                )
+            cv[offset_row_col:-offset_row_col, offset_row_col:-offset_row_col, :] = run_mc_cnn_fast(
+                img_left, img_right, disp_min, disp_max, self._model_path
+            )
         else:
-            # Fast architecture
-            if self._mc_cnn_arch == "fast":
-                cv = run_mc_cnn_fast(img_left, img_right, disp_min, disp_max, self._model_path)
-            # Accurate architecture
-            else:
-                cv = run_mc_cnn_accurate(img_left, img_right, disp_min, disp_max, self._model_path)
+            cv = run_mc_cnn_fast(img_left, img_right, disp_min, disp_max, self._model_path)
 
         # Allocate the xarray cost volume
         metadata = {
-            "measure": "mc_cnn_" + self._mc_cnn_arch,
+            "measure": "mc_cnn_fast",
             "subpixel": self._subpix,
             "offset_row_col": int((self._window_size - 1) / 2),
             "window_size": self._window_size,

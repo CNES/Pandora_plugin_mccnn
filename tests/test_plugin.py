@@ -71,7 +71,7 @@ class TestPlugin(unittest.TestCase):
         """
         # Create temporary directory
         with TemporaryDirectory() as tmp_dir:
-            pandora.main("tests/test_cfg_accurate.json", tmp_dir, verbose=False)
+            pandora.main("tests/test_cfg_mccnn_fast.json", tmp_dir, verbose=False)
 
             # Check the reference disparity map
             if self.error(rasterio.open(tmp_dir + "/left_disparity.tif").read(1), self.disp_ref, 1) > 0.17:
@@ -544,7 +544,6 @@ class TestPlugin(unittest.TestCase):
                 "matching_cost_method": "mc_cnn",
                 "window_size": 11,
                 "subpix": 1,
-                "mc_cnn_arch": "fast",
                 "model_path": "weights/mc_cnn_fast_mb_weights.pt",
             }
         )
@@ -1016,7 +1015,6 @@ class TestPlugin(unittest.TestCase):
                 "matching_cost_method": "mc_cnn",
                 "window_size": 11,
                 "subpix": 1,
-                "mc_cnn_arch": "fast",
                 "model_path": "weights/mc_cnn_fast_mb_weights.pt",
             }
         )

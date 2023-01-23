@@ -36,7 +36,7 @@ Let's refer to [Pandora's readme](https://github.com/CNES/Pandora/blob/master/RE
 
 More specifically, you can find :
 - [MCCNN configuration file example](https://raw.githubusercontent.com/CNES/Pandora/master/data_samples/json_conf_files/a_semi_global_matching_with_mccnn_similarity_measure.json)
-- [documentation about MCCNN theory and parameters](https://pandora.readthedocs.io/userguide/plugins/plugin_mccnn.html)
+- [documentation about MCCNN theory and parameters](https://pandora.readthedocs.io/en/stable/userguide/plugins/plugin_mccnn.html)
 
 
 ## Pretrained Weights for MCCNN networks
