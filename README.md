@@ -18,7 +18,7 @@
 ## Overview
 
 [Pandora](https://github.com/CNES/Pandora) stereo matching framework is designed to provide some state of the art stereo algorithms and to add others one as plugins.  
-This [Pandora plugin](https://pandora.readthedocs.io/userguide/plugin.html) aims to compute the cost volume using the similarity measure produced by MC-CNN neural network [[MCCNN]](#MCCNN), with the [MCCNN](https://github.com/CNES/Pandora_MCCNN)  library .
+This [Pandora plugin](https://pandora.readthedocs.io/en/stable/userguide/plugin.html) aims to compute the cost volume using the similarity measure produced by MC-CNN neural network [[MCCNN]](#MCCNN), with the [MCCNN](https://github.com/CNES/Pandora_MCCNN)  library .
 
 ## Install
 
@@ -59,7 +59,7 @@ wget https://raw.githubusercontent.com/CNES/Pandora_MCCNN/master/mc_cnn/weights/
 ### Access weights from pip package
 
 Pretrained weights are stored into the pip package and downloaded for any installation of mc_cnn pip package.
-To access if, use the `weights` submodule :
+To access it, use the `weights` submodule :
 
 ```python
 from mc_cnn.weights import get_weights
