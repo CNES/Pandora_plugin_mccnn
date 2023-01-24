@@ -562,7 +562,7 @@ class TestPlugin(unittest.TestCase):
                 "matching_cost_method": "mc_cnn",
                 "window_size": 11,
                 "subpix": 1,
-                "model_path": "weights/mc_cnn_fast_mb_weights.pt",
+                "model_path": "tests/weights/mc_cnn_fast_mb_weights.pt",
             }
         )
         cv = matching_cost_.compute_cost_volume(left, right, disp_min=-1, disp_max=1)
@@ -1033,7 +1033,7 @@ class TestPlugin(unittest.TestCase):
                 "matching_cost_method": "mc_cnn",
                 "window_size": 11,
                 "subpix": 1,
-                "model_path": "weights/mc_cnn_fast_mb_weights.pt",
+                "model_path": "tests/weights/mc_cnn_fast_mb_weights.pt",
             }
         )
         cv = matching_cost_.compute_cost_volume(left, right, disp_min=-1, disp_max=1)
