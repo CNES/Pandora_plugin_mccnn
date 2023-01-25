@@ -18,7 +18,7 @@
 ## Overview
 
 [Pandora](https://github.com/CNES/Pandora) stereo matching framework is designed to provide some state of the art stereo algorithms and to add others one as plugins.  
-This [Pandora plugin](https://pandora.readthedocs.io/userguide/plugin.html) aims to compute the cost volume using the similarity measure produced by MC-CNN neural network [[MCCNN]](#MCCNN), with the [MCCNN](https://github.com/CNES/Pandora_MCCNN)  library .
+This [Pandora plugin](https://pandora.readthedocs.io/en/stable/userguide/plugin.html) aims to compute the cost volume using the similarity measure produced by MC-CNN neural network [[MCCNN]](#MCCNN), with the [MCCNN](https://github.com/CNES/Pandora_MCCNN)  library .
 
 ## Install
 
@@ -41,6 +41,8 @@ More specifically, you can find :
 
 ## Pretrained Weights for MCCNN networks
 
+### Download weights files
+
 Pretrained weights for mc-cnn fast and mc-cnn accurate neural networks are available in the weights directory :
 -  mc_cnn_fast_mb_weights.pt and mc_cnn_accurate_mb_weights.pt are the weights of the pretrained networks on the Middlebury dataset [[Middlebury]](#Middlebury)
 -  mc_cnn_fast_data_fusion_contest.pt and mc_cnn_accurate_data_fusion_contest.pt are the weights of the pretrained networks on the Data Fusion Contest dataset [[DFC]](#DFC)
@@ -48,11 +50,26 @@ Pretrained weights for mc-cnn fast and mc-cnn accurate neural networks are avail
 To download the pretrained weights:
 
 ```bash
-wget https://raw.githubusercontent.com/CNES/Pandora_plugin_mccnn/master/weights/mc_cnn_fast_mb_weights.pt
-wget https://raw.githubusercontent.com/CNES/Pandora_plugin_mccnn/master/weights/mc_cnn_fast_data_fusion_contest.pt
-wget https://raw.githubusercontent.com/CNES/Pandora_plugin_mccnn/master/weights/mc_cnn_accurate_mb_weights.pt
-wget https://raw.githubusercontent.com/CNES/Pandora_plugin_mccnn/master/weights/mc_cnn_accurate_data_fusion_contest.pt
+wget https://raw.githubusercontent.com/CNES/Pandora_MCCNN/master/mc_cnn/weights/mc_cnn_fast_mb_weights.pt
+wget https://raw.githubusercontent.com/CNES/Pandora_MCCNN/master/mc_cnn/weights/mc_cnn_fast_data_fusion_contest.pt
+wget https://raw.githubusercontent.com/CNES/Pandora_MCCNN/master/mc_cnn/weights/mc_cnn_accurate_mb_weights.pt
+wget https://raw.githubusercontent.com/CNES/Pandora_MCCNN/master/mc_cnn/weights/mc_cnn_accurate_data_fusion_contest.pt
 ```
+
+### Access weights from pip package
+
+Pretrained weights are stored into the pip package and downloaded for any installation of mc_cnn pip package.
+To access it, use the `weights` submodule :
+
+```python
+from mc_cnn.weights import get_weights
+mc_cnn_fast_mb_weights_path = get_weights(arch="fast", training_dataset="middlebury")
+mc_cnn_fast_data_fusion_contest_path = get_weights(arch="fast", training_dataset="dfc")
+mc_cnn_accurate_mb_weights_path = get_weights(arch="accurate", training_dataset="middlebury")
+mc_cnn_accurate_data_fusion_contest = get_weights(arch="accurate", training_dataset="dfc")
+```
+
+## Output example
 
 The figures below show disparity maps produced on mountain, and desert areas generated with the Census and MCCNN similarity measures :
 

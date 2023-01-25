@@ -31,6 +31,7 @@ import numpy as np
 
 from pandora.matching_cost import matching_cost
 from mc_cnn.run import run_mc_cnn_fast
+from mc_cnn.weights import get_weights
 
 
 @matching_cost.AbstractMatchingCost.register_subclass("mc_cnn")
@@ -45,7 +46,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
     _WINDOW_SIZE = 11
     _SUBPIX = 1
     # Path to the pretrained model
-    _MODEL_PATH = None
+    _MODEL_PATH = str(get_weights())  # Weights file "mc_cnn_fast_mb_weights.pt" in MC-CNN pip package
 
     def __init__(self, **cfg: Union[int, str]):
         """
@@ -73,6 +74,8 @@ class MCCNN(matching_cost.AbstractMatchingCost):
             cfg["window_size"] = self._WINDOW_SIZE
         if "subpix" not in cfg:
             cfg["subpix"] = self._SUBPIX
+        if "model_path" not in cfg:
+            cfg["model_path"] = self._MODEL_PATH
 
         schema = {
             "matching_cost_method": And(str, lambda x: x == "mc_cnn"),

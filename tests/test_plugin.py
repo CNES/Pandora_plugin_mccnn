@@ -65,13 +65,31 @@ class TestPlugin(unittest.TestCase):
         return nb_error / float(nb_row * nb_col)
 
     def test_mc_cnn(self):
-        """ "
+        """
         Test Pandora + plugin_mc-cnn
 
         """
         # Create temporary directory
         with TemporaryDirectory() as tmp_dir:
             pandora.main("tests/test_cfg_mccnn_fast.json", tmp_dir, verbose=False)
+
+            # Check the reference disparity map
+            if self.error(rasterio.open(tmp_dir + "/left_disparity.tif").read(1), self.disp_ref, 1) > 0.17:
+                raise AssertionError
+
+            # Check the secondary disparity map
+            if self.error(-1 * rasterio.open(tmp_dir + "/right_disparity.tif").read(1), self.disp_sec, 1) > 0.17:
+                raise AssertionError
+
+    def test_mc_cnn_default_values(self):
+        """
+        Test Pandora + plugin_mc-cnn without specifying parameters window size, subpix and model_path
+        Uses the default model path : "mc_cnn_fast_mb_weights.pt" stored in MC-CNN pip package
+
+        """
+        # Create temporary directory
+        with TemporaryDirectory() as tmp_dir:
+            pandora.main("tests/test_cfg_mccnn_fast_default_values.json", tmp_dir, verbose=False)
 
             # Check the reference disparity map
             if self.error(rasterio.open(tmp_dir + "/left_disparity.tif").read(1), self.disp_ref, 1) > 0.17:
@@ -544,7 +562,7 @@ class TestPlugin(unittest.TestCase):
                 "matching_cost_method": "mc_cnn",
                 "window_size": 11,
                 "subpix": 1,
-                "model_path": "weights/mc_cnn_fast_mb_weights.pt",
+                "model_path": "tests/weights/mc_cnn_fast_mb_weights.pt",
             }
         )
         cv = matching_cost_.compute_cost_volume(left, right, disp_min=-1, disp_max=1)
@@ -1015,7 +1033,7 @@ class TestPlugin(unittest.TestCase):
                 "matching_cost_method": "mc_cnn",
                 "window_size": 11,
                 "subpix": 1,
-                "model_path": "weights/mc_cnn_fast_mb_weights.pt",
+                "model_path": "tests/weights/mc_cnn_fast_mb_weights.pt",
             }
         )
         cv = matching_cost_.compute_cost_volume(left, right, disp_min=-1, disp_max=1)
