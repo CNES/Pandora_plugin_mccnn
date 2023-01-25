@@ -2,11 +2,19 @@
 
 ## Unreleased
 
+## 1.1.0 (January 2023)
+
+### Changed
+
+- Move weights into MC-CNN pip package
+- Remove mccnn accurate architecture
+- Add minimal python version 3.7
+
 ## 1.0.1 (December 2021)
 
 ### Changed
 
-Update python packaging.
+- Update python packaging.
 
 ## 1.0.0 (July 2021)
 
