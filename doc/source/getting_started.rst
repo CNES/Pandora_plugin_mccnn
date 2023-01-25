@@ -5,7 +5,7 @@ Overview
 ########
 
 `Pandora <https://github.com/CNES/Pandora>`_ stereo matching framework is designed to provide some state of the art stereo algorithms and to add others one as plugins.
-This `Pandora plugin <https://pandora.readthedocs.io/userguide/plugin.html>`_ aims to compute the cost volume using the similarity measure produced by MC-CNN neural network, defined by [Zbontar]_, with the `MCCNN <https://github.com/CNES/Pandora_MCCNN>`_ library .
+This `Pandora plugin <https://pandora.readthedocs.io/en/stable/userguide/plugin.html>`_ aims to compute the cost volume using the similarity measure produced by MC-CNN neural network, defined by [Zbontar]_, with the `MCCNN <https://github.com/CNES/Pandora_MCCNN>`_ library .
 
 .. [Zbontar] Zbontar, J., & LeCun, Y. (2016). Stereo matching by training a convolutional neural network to compare image patches. J. Mach. Learn. Res., 17(1), 2287-2318.
 
@@ -14,9 +14,10 @@ Install
 
 **pandora_plugin_mccnn** is available on Pypi and can be installed by:
 
-```bash
-pip install pandora_plugin_mccnn
-```
+.. code-block:: bash
+
+    pip install pandora_plugin_mccnn
+
 
 This command will installed required dependencies as `Pandora <https://github.com/CNES/Pandora>`_ and `MCCNN <https://github.com/CNES/Pandora_MCCNN>`_.
 
@@ -30,7 +31,7 @@ More specifically, you can find :
 
 - `MCCNN configuration file example <https://raw.githubusercontent.com/CNES/Pandora/master/data_samples/json_conf_files/a_semi_global_matching_with_mccnn_similarity_measure.json>`_
 
-- `documentation about MCCNN theory and parameters <https://pandora.readthedocs.io/userguide/plugins/plugin_mccnn.html>`_
+- `documentation about MCCNN theory and parameters <https://pandora.readthedocs.io/en/stable/userguide/plugins/plugin_mccnn.html>`_
 
 
 Pretrained Weights for MCCNN networks

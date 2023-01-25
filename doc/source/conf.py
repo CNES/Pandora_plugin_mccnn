@@ -26,9 +26,14 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath("../plugin_mc-cnn"))
+
+# Extend Recursion limit for RecursionError in big files (bug astroid)
+sys.setrecursionlimit(8 * sys.getrecursionlimit())
+
 
 
 # -- Project information -----------------------------------------------------
