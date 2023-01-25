@@ -89,7 +89,7 @@ Please cite the following paper when using Pandora and pandora_plugin_mccnn:
 
 *Defonte, V., Dumas, L., Cournet, M., & Sarrazin, E. (2021, July). Evaluation of MC-CNN Based Stereo Matching Pipeline for the CO3D Earth Observation Program. In 2021 IEEE International Geoscience and Remote Sensing Symposium IGARSS (pp. 7670-7673). IEEE.*
 
-*Cournet, M., Sar dans cette issue https://gitlab.cnes.fr/3d/PandoraBox/pandora_plugins/plugin_mc-cnn/-/issues/12 manue razin, E., Dumas, L., Michel, J., Guinet, J., Youssefi, D., Defonte, V., Fardet, Q., 2020. Ground-truth generation and disparity estimation for optical satellite imagery. ISPRS - International Archives of the Photogrammetry, Remote Sensing and Spatial Information Sciences.*
+*Cournet, M., Sarrazin, E., Dumas, L., Michel, J., Guinet, J., Youssefi, D., Defonte, V., Fardet, Q., 2020. Ground-truth generation and disparity estimation for optical satellite imagery. ISPRS - International Archives of the Photogrammetry, Remote Sensing and Spatial Information Sciences.*
 
 <a id="MCCNN">[MCCNN]</a> 
 *Zbontar, J., & LeCun, Y. (2016). Stereo matching by training a convolutional neural network to compare image patches. J. Mach. Learn. Res., 17(1), 2287-2318.*
