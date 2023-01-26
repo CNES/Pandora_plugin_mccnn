@@ -6,9 +6,10 @@
 
 ### Changed
 
-- Move weights into MC-CNN pip package
-- Remove mccnn accurate architecture
+- Move weights into MCCNN pip package
+- Remove MCCNN accurate architecture
 - Add minimal python version 3.7
+- Udpate dependency to MCCNN 1.1.0
 
 ## 1.0.1 (December 2021)
 
