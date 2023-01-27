@@ -12,22 +12,21 @@ This file keeps track of authors contributions.
 ## Development Lead
 
 * Emmanuelle Sarrazin <emmanuelle.sarrazin@cnes.fr>
-* Loïc Dumas <loic.dumas@csgroup.eu>
 * Natalia Jimenez <natalia.jimenez-diaz@csgroup.eu>
 * Alice de Bardonnèche-Richard <alice.de-bardonneche-richard@csgroup.eu>
 
 ## Contributors
 
+* Veronique Defonte <veronique.defonte@csgroup.eu>
 * Quentin Fardet <quentin.fardet@csgroup.eu>
-* Veronique Defonte <veronique.defonte@c-s.fr>
-* Yoann Steux <yoann.steux@c-s.fr>
-* Mathis Roux <mathis.roux@cs-net.eu>
+* Yoann Steux <yoann.steux@csgroup.eu>
+* Mathis Roux <mathis.roux@csgroup.eu>
 
 Update here with new contributors.
 
 ## Original Developers/Designers/Supporters
 
+* Myriam Cournet <myriam.cournet@cnes.fr>
+* Veronique Defonte <veronique.defonte@csgroup.eu>
 * Emmanuelle Sarrazin <emmanuelle.sarrazin@cnes.fr>
 * Loïc Dumas <loic.dumas@csgroup.eu>
-* Veronique Defonte <veronique.defonte@c-s.fr>
-* Quentin Fardet <quentin.fardet@csgroup.eu>
