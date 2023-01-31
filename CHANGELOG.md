@@ -10,6 +10,8 @@
 - Remove MCCNN accurate architecture
 - Add minimal python version 3.7
 - Udpate dependency to MCCNN 1.1.0
+- Udpate dependency to pandora 1.3.0
+
 
 ## 1.0.1 (December 2021)
 
