@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added 
+
+- Add multiband images compatibility [#30]
+
 ## 1.1.0 (January 2023)
 
 ### Changed
