@@ -25,7 +25,7 @@ This module contains all functions to calculate the cost volume with mc-cnn netw
 
 from typing import Dict, Union
 import os
-from json_checker import Checker, And
+from json_checker import Checker, And, Or
 import xarray as xr
 import numpy as np
 
@@ -47,6 +47,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
     _SUBPIX = 1
     # Path to the pretrained model
     _MODEL_PATH = str(get_weights())  # Weights file "mc_cnn_fast_mb_weights.pt" in MC-CNN pip package
+    _BAND = None
 
     def __init__(self, **cfg: Union[int, str]):
         """
@@ -59,6 +60,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         self._model_path = str(self.cfg["model_path"])
         self._window_size = self.cfg["window_size"]
         self._subpix = self.cfg["subpix"]
+        self._band = self.cfg["band"]
 
     def check_config(self, **cfg: Union[int, str]) -> Dict[str, Union[int, str]]:
         """
@@ -76,12 +78,15 @@ class MCCNN(matching_cost.AbstractMatchingCost):
             cfg["subpix"] = self._SUBPIX
         if "model_path" not in cfg:
             cfg["model_path"] = self._MODEL_PATH
+        if "band" not in cfg:
+            cfg["band"] = self._BAND
 
         schema = {
             "matching_cost_method": And(str, lambda x: x == "mc_cnn"),
             "window_size": And(int, lambda x: x == 11),
             "subpix": And(int, lambda x: x == 1),
             "model_path": And(str, lambda x: os.path.exists(x)),
+            "band": Or(str, lambda input: input is None),
         }
 
         checker = Checker(schema)
@@ -121,6 +126,8 @@ class MCCNN(matching_cost.AbstractMatchingCost):
                 - cost_volume 3D xarray.DataArray (row, col, disp)
                 - confidence_measure 3D xarray.DataArray (row, col, indicator)
         """
+        # check band parameter
+        self.check_band_input_mc(img_left, img_right)
 
         # Disparity range
         if self._subpix == 1:
@@ -129,17 +136,29 @@ class MCCNN(matching_cost.AbstractMatchingCost):
             disparity_range = np.arange(disp_min, disp_max, step=1 / float(self._subpix))
             disparity_range = np.append(disparity_range, [disp_max])
 
+        # If multiband, select the corresponding band
+        if self._band is not None:
+            band_index_left = list(img_left.band.data).index(self._band)
+            band_index_right = list(img_right.band.data).index(self._band)
+            selected_band_right = img_right["im"].data[band_index_right, :, :]
+            selected_band_left = img_left["im"].data[band_index_left, :, :]
+        else:
+            selected_band_right = img_right["im"].data
+            selected_band_left = img_left["im"].data
+
         offset_row_col = int((self._window_size - 1) / 2)
-        cv = np.zeros((img_right["im"].shape[0], img_left["im"].shape[1], len(disparity_range)), dtype=np.float32)
+        cv = np.zeros(
+            (selected_band_left.shape[0], selected_band_left.shape[1], len(disparity_range)), dtype=np.float32
+        )
         cv += np.nan
 
         # If offset, do not consider border position for cost computation
         if offset_row_col != 0:
             cv[offset_row_col:-offset_row_col, offset_row_col:-offset_row_col, :] = run_mc_cnn_fast(
-                img_left, img_right, disp_min, disp_max, self._model_path
+                selected_band_left, selected_band_right, disp_min, disp_max, self._model_path
             )
         else:
-            cv = run_mc_cnn_fast(img_left, img_right, disp_min, disp_max, self._model_path)
+            cv = run_mc_cnn_fast(selected_band_left, selected_band_right, disp_min, disp_max, self._model_path)
 
         # Allocate the xarray cost volume
         metadata = {
@@ -149,6 +168,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
             "window_size": self._window_size,
             "type_measure": "min",
             "cmax": 1,
+            "band_correl": self._band,
         }
 
         cv = self.allocate_costvolume(img_left, self._subpix, disp_min, disp_max, self._window_size, metadata, cv)
