@@ -5,6 +5,7 @@
 ### Added 
 
 - Add multiband images compatibility [#30]
+- Add dev dependencies in githubAction file
 
 ## 1.1.0 (January 2023)
 
