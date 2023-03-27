@@ -4,8 +4,14 @@
 
 ### Added 
 
+## 1.2.0 (March 2023)
+
+### Added
+
 - Add multiband images compatibility [#30]
 - Add dev dependencies in githubAction file
+- Update dependency to MCCNN 1.2.0
+- Update dependency to pandora 1.4.0
 
 ## 1.1.0 (January 2023)
 
@@ -14,8 +20,8 @@
 - Move weights into MCCNN pip package
 - Remove MCCNN accurate architecture
 - Add minimal python version 3.7
-- Udpate dependency to MCCNN 1.1.0
-- Udpate dependency to pandora 1.3.0
+- Update dependency to MCCNN 1.1.0
+- Update dependency to pandora 1.3.0
 
 
 ## 1.0.1 (December 2021)
@@ -28,7 +34,7 @@
 
 ### Added
 
-- Udpate dependency to MCCNN 1.0.0
+- Update dependency to MCCNN 1.0.0
 
 ## 0.0.6 (March 2021)
 
