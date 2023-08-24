@@ -23,7 +23,7 @@
 This module contains all functions to calculate the cost volume with mc-cnn networks
 """
 
-from typing import Dict, Union
+from typing import Dict, Union, Optional
 import os
 from json_checker import Checker, And, Or
 import xarray as xr
@@ -137,14 +137,8 @@ class MCCNN(matching_cost.AbstractMatchingCost):
             disparity_range = np.append(disparity_range, [disp_max])
 
         # If multiband, select the corresponding band
-        if self._band is not None:
-            band_index_left = list(img_left.band.data).index(self._band)
-            band_index_right = list(img_right.band.data).index(self._band)
-            selected_band_right = img_right["im"].data[band_index_right, :, :]
-            selected_band_left = img_left["im"].data[band_index_left, :, :]
-        else:
-            selected_band_right = img_right["im"].data
-            selected_band_left = img_left["im"].data
+        selected_band_left = get_band_values(img_left, self._band)
+        selected_band_right = get_band_values(img_right, self._band)
 
         offset_row_col = int((self._window_size - 1) / 2)
         cv = np.zeros(
@@ -174,3 +168,18 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         cv = self.allocate_costvolume(img_left, self._subpix, disp_min, disp_max, self._window_size, metadata, cv)
 
         return cv
+
+
+def get_band_values(image_dataset: xr.Dataset, band_name: Optional[str] = None) -> np.ndarray:
+    """
+     Get values of given band_name from image_dataset as numpy array.
+
+    :param image_dataset: image dataset
+    :type image_dataset: xr.Dataset with band_im coordinate
+    :param band_name: nome of the band to extract. If None (default) return all bands values.
+    :type band_name: str
+    :return: selected band
+    :rtype: np.ndarray
+    """
+    selection = image_dataset if band_name is None else image_dataset.sel(band_im=band_name)
+    return selection["im"].to_numpy()
