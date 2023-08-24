@@ -1,7 +1,27 @@
+# Python
 __pycache__/
 *.pyc
+
+# Python package
+.eggs/
+*.egg-info/
+
+# Documentation build and API
 doc/build/
+
+# Python coverage output
 .coverage
 coverage.xml
+
+# Python test reports
 nosetests.xml
 pylint-report.txt
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
