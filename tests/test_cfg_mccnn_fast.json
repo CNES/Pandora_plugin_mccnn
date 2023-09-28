@@ -2,8 +2,7 @@
   "input" : {
     "img_left" : "tests/image/left_img.png",
     "img_right" : "tests/image/right_img.png",
-    "disp_min" : -60,
-    "disp_max" : 0
+    "disp_left" : [-60, 0]
   },
   "pipeline": {
     "right_disp_map": {
