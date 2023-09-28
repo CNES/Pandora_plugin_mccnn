@@ -165,7 +165,9 @@ class MCCNN(matching_cost.AbstractMatchingCost):
             "band_correl": self._band,
         }
 
-        cv = self.allocate_costvolume(img_left, self._subpix, disp_min, disp_max, self._window_size, metadata, cv)
+        cv = self.allocate_costvolume(
+            img_left, self._subpix, disp_min, disp_max, self._window_size, metadata, self._step_col, cv
+        )
 
         return cv
 
