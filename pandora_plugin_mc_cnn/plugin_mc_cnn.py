@@ -61,6 +61,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         self._window_size = self.cfg["window_size"]
         self._subpix = self.cfg["subpix"]
         self._band = self.cfg["band"]
+        self._step_col = int(self.cfg["step"])
 
     def check_config(self, **cfg: Union[int, str]) -> Dict[str, Union[int, str]]:
         """
@@ -80,6 +81,9 @@ class MCCNN(matching_cost.AbstractMatchingCost):
             cfg["model_path"] = self._MODEL_PATH
         if "band" not in cfg:
             cfg["band"] = self._BAND
+        if "step" not in cfg:
+            cfg["step"] = self._STEP_COL  # type: ignore
+
 
         schema = {
             "matching_cost_method": And(str, lambda x: x == "mc_cnn"),
@@ -87,6 +91,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
             "subpix": And(int, lambda x: x == 1),
             "model_path": And(str, lambda x: os.path.exists(x)),
             "band": Or(str, lambda input: input is None),
+            "step": And(int, lambda y: y >= 1),
         }
 
         checker = Checker(schema)
@@ -174,9 +179,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
             "band_correl": self._band,
         }
 
-        cv = self.allocate_costvolume(
-            img_left, self._subpix, disp_min, disp_max, self._window_size, metadata, self._step_col, cv
-        )
+        cv = self.allocate_costvolume(img_left, self._subpix, disp_min, disp_max, self._window_size, metadata, cv)
 
         return cv
 
