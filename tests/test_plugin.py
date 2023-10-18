@@ -34,6 +34,7 @@ import xarray as xr
 import pandora
 from pandora import matching_cost
 from pandora_plugin_mc_cnn.plugin_mc_cnn import MCCNN, get_band_values  # pylint: disable=unused-import
+from pandora.img_tools import add_disparity
 
 
 # pylint: disable=unsubscriptable-object
@@ -177,6 +178,7 @@ class TestPlugin(unittest.TestCase):
         left.attrs["no_data_mask"] = 1
         left.attrs["crs"] = None
         left.attrs["transform"] = None
+        left.pipe(add_disparity, disparity=[-1, 1], window=None)
 
         data = np.zeros((13, 13), dtype=np.float64)
         data += 0.1
@@ -321,13 +323,20 @@ class TestPlugin(unittest.TestCase):
                 "model_path": "tests/weights/mc_cnn_fast_mb_weights.pt",
             }
         )
-        cv = matching_cost_.compute_cost_volume(left, right, disp_min=-1, disp_max=1)
+        cv = matching_cost_.compute_cost_volume(
+            img_left=left,
+            img_right=right,
+            grid_disp_min=left["disparity"].sel(band_disp="min"),
+            grid_disp_max=left["disparity"].sel(band_disp="max")
+        )
 
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
         np.testing.assert_allclose(cv["cost_volume"].data, cv_before_invali, rtol=1e-06)
 
         # Masked cost volume with pandora function
-        matching_cost_.cv_masked(left, right, cv, -1, 1)
+        matching_cost_.cv_masked(
+            left, right, cv, left["disparity"].sel(band_disp="min"), left["disparity"].sel(band_disp="max")
+        )
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
         np.testing.assert_allclose(cv["cost_volume"].data, cv_ground_truth, rtol=1e-06)
         # ------------ Test the method with a secondary mask ( reference mask contains valid pixels ) ------------
@@ -348,6 +357,7 @@ class TestPlugin(unittest.TestCase):
         left.attrs["no_data_mask"] = 1
         left.attrs["crs"] = None
         left.attrs["transform"] = None
+        left.pipe(add_disparity, disparity=[-1, 1], window=None)
 
         data = np.zeros((13, 13), dtype=np.float64)
         data += 0.1
@@ -511,13 +521,20 @@ class TestPlugin(unittest.TestCase):
                 "model_path": "tests/weights/mc_cnn_fast_mb_weights.pt",
             }
         )
-        cv = matching_cost_.compute_cost_volume(left, right, disp_min=-1, disp_max=1)
+        cv = matching_cost_.compute_cost_volume(
+            img_left=left,
+            img_right=right,
+            grid_disp_min=left["disparity"].sel(band_disp="min"),
+            grid_disp_max=left["disparity"].sel(band_disp="max")
+        )
 
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
         np.testing.assert_allclose(cv["cost_volume"].data, cv_before_invali, rtol=1e-06)
 
         # Masked cost volume with pandora function
-        matching_cost_.cv_masked(left, right, cv, -1, 1)
+        matching_cost_.cv_masked(
+            left, right, cv, left["disparity"].sel(band_disp="min"), left["disparity"].sel(band_disp="max")
+        )
 
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
         np.testing.assert_allclose(cv["cost_volume"].data, cv_ground_truth, rtol=1e-06)
