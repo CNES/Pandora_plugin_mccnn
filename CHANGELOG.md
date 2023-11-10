@@ -2,9 +2,21 @@
 
 ## Unreleased
 
+## 1.3.0a1 (November 2023)
+
+### Added
+
+ - Add function to get band values, the numpy array. [#31]
+
+### Changed
+
+- New format for disparity in the user configuration file. [#33]
+- Update with new API of Pandora compute_cost_volume function. [#38]
+
 ### Fixed
 
  - Deletion of the pip install codecov of githubAction CI.
+ - Remove right_disp_map. [#37]
 
 ## 1.2.0 (March 2023)
 

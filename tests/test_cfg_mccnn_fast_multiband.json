@@ -2,13 +2,9 @@
   "input" : {
     "img_left" : "tests/image/left_rgb.tif",
     "img_right" : "tests/image/right_rgb.tif",
-    "disp_min" : -60,
-    "disp_max" : 0
+    "disp_left" : [-60, 0]
   },
   "pipeline": {
-    "right_disp_map": {
-	    "method": "accurate"
-    },
     "matching_cost" : {
         "matching_cost_method": "mc_cnn",
         "subpix": 1,
@@ -31,7 +27,7 @@
        "filter_size": 3
     },
     "validation" : {
-        "validation_method": "cross_checking",
+        "validation_method": "cross_checking_accurate",
         "cross_checking_threshold": 1
     }
   }
