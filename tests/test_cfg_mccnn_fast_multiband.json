@@ -1,8 +1,12 @@
 {
   "input" : {
-    "img_left" : "tests/image/left_rgb.tif",
-    "img_right" : "tests/image/right_rgb.tif",
-    "disp_left" : [-60, 0]
+    "left": {
+      "img": "tests/image/left_rgb.tif",
+      "disp": [-60, 0]
+    },
+    "right": {
+      "img": "tests/image/right_rgb.tif"
+    }
   },
   "pipeline": {
     "matching_cost" : {
