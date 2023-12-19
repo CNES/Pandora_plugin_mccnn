@@ -33,8 +33,8 @@ import xarray as xr
 
 import pandora
 from pandora import matching_cost
-from pandora_plugin_mc_cnn.plugin_mc_cnn import MCCNN, get_band_values  # pylint: disable=unused-import
 from pandora.img_tools import add_disparity
+from pandora_plugin_mc_cnn.plugin_mc_cnn import MCCNN, get_band_values  # pylint: disable=unused-import
 
 
 # pylint: disable=unsubscriptable-object
@@ -323,11 +323,16 @@ class TestPlugin(unittest.TestCase):
                 "model_path": "tests/weights/mc_cnn_fast_mb_weights.pt",
             }
         )
+        disparity_grids = (
+            left["disparity"].sel(band_disp="min").data,
+            left["disparity"].sel(band_disp="max").data,
+        )
+
+        cost_volume = matching_cost_.allocate_cost_volume(left, disparity_grids)
         cv = matching_cost_.compute_cost_volume(
             img_left=left,
             img_right=right,
-            grid_disp_min=left["disparity"].sel(band_disp="min"),
-            grid_disp_max=left["disparity"].sel(band_disp="max")
+            cost_volume=cost_volume,
         )
 
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
@@ -521,11 +526,16 @@ class TestPlugin(unittest.TestCase):
                 "model_path": "tests/weights/mc_cnn_fast_mb_weights.pt",
             }
         )
+        disparity_grids = (
+            left["disparity"].sel(band_disp="min").data,
+            left["disparity"].sel(band_disp="max").data,
+        )
+
+        cost_volume = matching_cost_.allocate_cost_volume(left, disparity_grids)
         cv = matching_cost_.compute_cost_volume(
             img_left=left,
             img_right=right,
-            grid_disp_min=left["disparity"].sel(band_disp="min"),
-            grid_disp_max=left["disparity"].sel(band_disp="max")
+            cost_volume=cost_volume,
         )
 
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
