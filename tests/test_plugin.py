@@ -33,6 +33,7 @@ import xarray as xr
 
 import pandora
 from pandora import matching_cost
+from pandora.criteria import validity_mask
 from pandora.img_tools import add_disparity
 from pandora_plugin_mc_cnn.plugin_mc_cnn import MCCNN, get_band_values  # pylint: disable=unused-import
 
@@ -329,6 +330,8 @@ class TestPlugin(unittest.TestCase):
         )
 
         cost_volume = matching_cost_.allocate_cost_volume(left, disparity_grids)
+        cost_volume = validity_mask(left, right, cost_volume)
+
         cv = matching_cost_.compute_cost_volume(
             img_left=left,
             img_right=right,
@@ -532,6 +535,7 @@ class TestPlugin(unittest.TestCase):
         )
 
         cost_volume = matching_cost_.allocate_cost_volume(left, disparity_grids)
+        cost_volume = validity_mask(left, right, cost_volume)
         cv = matching_cost_.compute_cost_volume(
             img_left=left,
             img_right=right,
