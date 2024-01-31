@@ -1,6 +1,13 @@
 # Changelog
 
-## Unreleased
+## 1.3.0 (January 2024)
+
+### Changed
+- Update user configuration file with new keys : "left" & "right". [#34]
+- Move allocate_cost_volume. [#35]
+- Update of the minimal version for python. [#39]
+- Update with new validity_mask. [#40]
+- Update dependency to MCCNN 1.2.2
 
 ## 1.3.0a1 (November 2023)
 

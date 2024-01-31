@@ -62,6 +62,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         self._subpix = self.cfg["subpix"]
         self._band = self.cfg["band"]
         self._step_col = int(self.cfg["step"])
+        self._method = str(self.cfg["matching_cost_method"])
 
     def check_config(self, **cfg: Union[int, str]) -> Dict[str, Union[int, str]]:
         """
@@ -84,7 +85,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         if "step" not in cfg:
             cfg["step"] = self._STEP_COL  # type: ignore
 
-
         schema = {
             "matching_cost_method": And(str, lambda x: x == "mc_cnn"),
             "window_size": And(int, lambda x: x == 11),
@@ -98,15 +98,11 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         checker.validate(cfg)
         return cfg
 
-    def desc(self):
-        """
-        Describes the optimization method
-
-        """
-        print("MC-CNN similarity measure")
-
     def compute_cost_volume(
-        self, img_left: xr.Dataset, img_right: xr.Dataset, grid_disp_min: np.ndarray, grid_disp_max: np.ndarray
+        self,
+        img_left: xr.Dataset,
+        img_right: xr.Dataset,
+        cost_volume: xr.Dataset,
     ) -> xr.Dataset:
         """
         Computes the cost volume for a pair of images
@@ -127,38 +123,26 @@ class MCCNN(matching_cost.AbstractMatchingCost):
                 - msk (optional): 2D (row, col) xarray.DataArray int16
                 - classif (optional): 3D (band_classif, row, col) xarray.DataArray int16
                 - segm (optional): 2D (row, col) xarray.DataArray int16
-        :param disp_min: minimum disparity
-        :type disp_min: np.ndarray
-        :param disp_max: maximum disparity
-        :type disp_max: np.ndarray
-        :return: the cost volume dataset
-        :rtype:
-            xarray.Dataset, with the data variables:
+        :param cost_volume: an empty cost volume
+        :type cost_volume: xr.Dataset
+        :return: the cost volume dataset, with the data variables:
                 - cost_volume 3D xarray.DataArray (row, col, disp)
-                - confidence_measure 3D xarray.DataArray (row, col, indicator)
+        :rtype:
+            xarray.Dataset
         """
-        # Obtain absolute min and max disparities
-        disp_min, disp_max = self.get_min_max_from_grid(grid_disp_min, grid_disp_max)
-
         # check band parameter
         self.check_band_input_mc(img_left, img_right)
-
-        # Disparity range
-        if self._subpix == 1:
-            disparity_range = np.arange(disp_min, disp_max + 1)
-        else:
-            disparity_range = np.arange(disp_min, disp_max, step=1 / float(self._subpix))
-            disparity_range = np.append(disparity_range, [disp_max])
 
         # If multiband, select the corresponding band
         selected_band_left = get_band_values(img_left, self._band)
         selected_band_right = get_band_values(img_right, self._band)
 
-        offset_row_col = int((self._window_size - 1) / 2)
-        cv = np.zeros(
-            (selected_band_left.shape[0], selected_band_left.shape[1], len(disparity_range)), dtype=np.float32
+        disparity_range = cost_volume.coords["disp"].data
+        disp_min, disp_max = disparity_range[0], disparity_range[-1]
+        offset_row_col = cost_volume.attrs["offset_row_col"]
+        cv = np.full(
+            (selected_band_left.shape[0], selected_band_left.shape[1], len(disparity_range)), np.nan, dtype=np.float32
         )
-        cv += np.nan
 
         # If offset, do not consider border position for cost computation
         if offset_row_col != 0:
@@ -168,20 +152,18 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         else:
             cv = run_mc_cnn_fast(selected_band_left, selected_band_right, disp_min, disp_max, self._model_path)
 
+        index_col = cost_volume.attrs["col_to_compute"]
+        index_col = index_col - img_left.coords["col"].data[0]  # If first col coordinate is not 0
+        cost_volume["cost_volume"].data = cv[:, index_col, :]
         # Allocate the xarray cost volume
-        metadata = {
-            "measure": "mc_cnn_fast",
-            "subpixel": self._subpix,
-            "offset_row_col": int((self._window_size - 1) / 2),
-            "window_size": self._window_size,
-            "type_measure": "min",
-            "cmax": 1,
-            "band_correl": self._band,
-        }
+        cost_volume.attrs.update(
+            {
+                "type_measure": "min",
+                "cmax": 1,
+            }
+        )
 
-        cv = self.allocate_costvolume(img_left, self._subpix, disp_min, disp_max, self._window_size, metadata, cv)
-
-        return cv
+        return cost_volume
 
 
 def get_band_values(image_dataset: xr.Dataset, band_name: Optional[str] = None) -> np.ndarray:
