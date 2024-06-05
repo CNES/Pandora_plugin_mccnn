@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.1a1 (June 2024)
+
+### Changed
+- Update the check_conf method to align with those in pandora. [#41]
+
 ## 1.3.0 (January 2024)
 
 ### Changed
