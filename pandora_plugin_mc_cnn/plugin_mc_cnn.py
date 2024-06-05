@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2021 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2024 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Pandora plugin MC-CNN
 #
@@ -56,15 +56,10 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         'window_size': value, 'subpix': value, 'model_path' :value}
         :type cfg: dictionary
         """
-        self.cfg = self.check_config(**cfg)
+        super().instantiate_class(**cfg)
         self._model_path = str(self.cfg["model_path"])
-        self._window_size = self.cfg["window_size"]
-        self._subpix = self.cfg["subpix"]
-        self._band = self.cfg["band"]
-        self._step_col = int(self.cfg["step"])
-        self._method = str(self.cfg["matching_cost_method"])
 
-    def check_config(self, **cfg: Union[int, str]) -> Dict[str, Union[int, str]]:
+    def check_conf(self, **cfg: Union[int, str]) -> Dict[str, Union[int, str]]:
         """
         Add default values to the dictionary if there are missing elements and check if the dictionary is correct
 
@@ -73,26 +68,15 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         :return cfg: matching_cost configuration updated
         :rtype: dict
         """
-        # Give the default value if the required element is not in the configuration
-        if "window_size" not in cfg:
-            cfg["window_size"] = self._WINDOW_SIZE
-        if "subpix" not in cfg:
-            cfg["subpix"] = self._SUBPIX
+        cfg = super().check_conf(**cfg)
+
         if "model_path" not in cfg:
             cfg["model_path"] = self._MODEL_PATH
-        if "band" not in cfg:
-            cfg["band"] = self._BAND
-        if "step" not in cfg:
-            cfg["step"] = self._STEP_COL  # type: ignore
 
-        schema = {
-            "matching_cost_method": And(str, lambda x: x == "mc_cnn"),
-            "window_size": And(int, lambda x: x == 11),
-            "subpix": And(int, lambda x: x == 1),
-            "model_path": And(str, lambda x: os.path.exists(x)),
-            "band": Or(str, lambda input: input is None),
-            "step": And(int, lambda y: y >= 1),
-        }
+        schema = self.schema
+        schema["matching_cost_method"] = And(str, lambda input: "mc_cnn")
+        schema["window_size"] = And(int, lambda x: x == 11)
+        schema["model_path"] = And(str, lambda x: os.path.exists(x))
 
         checker = Checker(schema)
         checker.validate(cfg)
