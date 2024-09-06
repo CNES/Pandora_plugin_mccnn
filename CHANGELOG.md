@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.3a1 (September 2024)
+
+### Changed
+- Update numpy version. [#43]
+
+
 ## 1.3.2 (June 2024)
 
 ### Changed
