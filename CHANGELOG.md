@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.4 (April 2025)
+
+### Changed
+
+- Update pandora version.
+
+
 ## 1.3.3 (September 2024)
 
 ## 1.3.3a1 (September 2024)
