@@ -11,16 +11,16 @@
 #   - total_cv_time, total_cv_mem
 #   - framework, variant
 #
-# Frameworks (CPU):
+# Framework (CPU):
 #   - pytorch
 #   - onnx
 #   - openvino
 #
-# Variants:
+# Variant:
 #   - baseline
 #   - opt1
 #
-# Providers:
+# Provider:
 #   - cpu_base
 #   - openvino
 #
@@ -150,7 +150,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         """
         super().instantiate_class(**cfg)
         self._model_path = str(self.cfg["model_path"])
-        self._framework = str(self.cfg.get("frameworks", self._FRAMEWORK))
+        self._framework = str(self.cfg.get("framework", self._FRAMEWORK))
         self._variant = str(self.cfg.get("variant", self._VARIANT))
         self._provider = str(self.cfg.get("provider", self._PROVIDER))
 
@@ -221,7 +221,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         if offset_row_col != 0:
             cv[offset_row_col:-offset_row_col, offset_row_col:-offset_row_col, :] = run_mc_cnn_fast(
                 selected_band_left, selected_band_right, disp_min, disp_max, self._model_path,
-                framework=self._framework, variant=self._variant
+                framework=self._framework, variant=self._variant, provider=self._provider
             )
         else:
             cv = run_mc_cnn_fast(
