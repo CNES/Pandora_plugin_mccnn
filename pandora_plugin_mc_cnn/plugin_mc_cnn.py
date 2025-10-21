@@ -98,7 +98,7 @@ class MemorySampler:
         return bytes_to_mb(self._peak)
 
 
-def _write_metrics_total(framework: str, variant: str, total_time: float, total_mem_mb: float) -> None:
+def _write_metrics_total(framework: str, provider: str, variant: str, total_time: float, total_mem_mb: float) -> None:
     """
     Write total-stage metrics JSON to PANDORA_RUN_OUTPUT_DIR if set.
     """
@@ -111,6 +111,7 @@ def _write_metrics_total(framework: str, variant: str, total_time: float, total_
         payload = {
             "framework": framework,
             "variant": variant,
+            "provider": provider,
             "total_cv_time": float(total_time),
             "total_cv_mem": float(total_mem_mb),
         }
@@ -135,6 +136,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
     _FRAMEWORK = "pytorch"  # Default framework (CPU-only)
     _VARIANT = "baseline"   # Default variant
     _PROVIDER = "cpu_base"
+    _QUANTIZATION = False
 
     def __init__(self, **cfg: Union[int, str]):
         """
@@ -153,6 +155,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         self._framework = str(self.cfg.get("framework", self._FRAMEWORK))
         self._variant = str(self.cfg.get("variant", self._VARIANT))
         self._provider = str(self.cfg.get("provider", self._PROVIDER))
+        self._quantization = bool(self.cfg.get("quantization", self._QUANTIZATION))
 
     def check_conf(self, **cfg: Union[int, str]) -> Dict[str, Union[int, str]]:
         """
@@ -172,6 +175,9 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         if "provider" not in cfg:
             cfg["provider"] = self._PROVIDER
         
+        if "quantization" not in cfg:
+            cfg["quantization"] = self._QUANTIZATION
+
         schema = self.schema
         schema["matching_cost_method"] = And(str, lambda x: x == "mc_cnn")
         schema["window_size"] = And(int, lambda x: x == 11)
@@ -179,6 +185,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         schema["framework"] = And(str, lambda x: x in ["pytorch", "onnx", "openvino"])
         schema["variant"] = And(str, lambda x: x in ["baseline", "opt1", "opt2", "cpp", "cpp2"])
         schema["provider"] = And(str, lambda x: x in ["cpu_base", "openvino"])
+        schema["quantization"] = And(bool, lambda x: x in [True, False])
 
         checker = Checker(schema)
         checker.validate(cfg)
@@ -256,7 +263,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         )
 
         # Write structured total metrics
-        _write_metrics_total(self._framework, self._variant, time_total, mem_total_peak)
+        _write_metrics_total(self._framework, self._provider, self._variant, time_total, mem_total_peak)
 
         # Optional dump of the computed CV (for correctness checks) — NOT INCLUDED in timing
         if os.getenv("MCCNN_DUMP_CV", "0") in ("1", "true", "True"):
