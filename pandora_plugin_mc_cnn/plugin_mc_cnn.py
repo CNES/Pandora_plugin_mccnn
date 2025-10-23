@@ -177,7 +177,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         schema["window_size"] = And(int, lambda x: x == 11)
         schema["model_path"] = And(str, lambda x: os.path.exists(x))
         schema["framework"] = And(str, lambda x: x in ["pytorch", "onnx", "openvino"])
-        schema["variant"] = And(str, lambda x: x in ["baseline", "opt1", "opt2", "cpp"])
+        schema["variant"] = And(str, lambda x: x in ["baseline", "opt1", "opt2", "cpp", "cpp2"])
         schema["provider"] = And(str, lambda x: x in ["cpu_base", "openvino"])
 
         checker = Checker(schema)
