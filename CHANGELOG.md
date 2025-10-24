@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.5a1 (October 2025)
+
+### Added
+
+- Add a profiling. 
+
 ## 1.3.4 (April 2025)
 
 ### Changed
