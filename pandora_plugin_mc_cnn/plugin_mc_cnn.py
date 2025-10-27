@@ -19,6 +19,8 @@
 # Variant:
 #   - baseline
 #   - opt1
+#   - opt2
+#   - cpp (and optionally cpp2)
 #
 # Provider:
 #   - cpu_base
@@ -136,7 +138,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
     _FRAMEWORK = "pytorch"  # Default framework (CPU-only)
     _VARIANT = "baseline"   # Default variant
     _PROVIDER = "cpu_base"
-    _QUANTIZATION = False
 
     def __init__(self, **cfg: Union[int, str]):
         """
@@ -146,8 +147,9 @@ class MCCNN(matching_cost.AbstractMatchingCost):
             'subpix': int,
             'model_path': str,
             'framework': 'pytorch'|'onnx'|'openvino',
-            'variant': 'baseline'|'opt1'
-            'provider': 'cpu_base'|'openvino'
+            'variant': 'baseline'|'opt1'|'opt2'|'cpp'|'cpp2',
+            'provider': 'cpu_base'|'openvino',
+            'model_name': str (optional; used to select a specific ONNX/IR file)
         }
         """
         super().instantiate_class(**cfg)
@@ -155,7 +157,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         self._framework = str(self.cfg.get("framework", self._FRAMEWORK))
         self._variant = str(self.cfg.get("variant", self._VARIANT))
         self._provider = str(self.cfg.get("provider", self._PROVIDER))
-        self._quantization = bool(self.cfg.get("quantization", self._QUANTIZATION))
 
     def check_conf(self, **cfg: Union[int, str]) -> Dict[str, Union[int, str]]:
         """
@@ -171,12 +172,9 @@ class MCCNN(matching_cost.AbstractMatchingCost):
 
         if "variant" not in cfg:
             cfg["variant"] = self._VARIANT
-        
+
         if "provider" not in cfg:
             cfg["provider"] = self._PROVIDER
-        
-        if "quantization" not in cfg:
-            cfg["quantization"] = self._QUANTIZATION
 
         schema = self.schema
         schema["matching_cost_method"] = And(str, lambda x: x == "mc_cnn")
@@ -185,7 +183,8 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         schema["framework"] = And(str, lambda x: x in ["pytorch", "onnx", "openvino"])
         schema["variant"] = And(str, lambda x: x in ["baseline", "opt1", "opt2", "cpp", "cpp2"])
         schema["provider"] = And(str, lambda x: x in ["cpu_base", "openvino"])
-        schema["quantization"] = And(bool, lambda x: x in [True, False])
+        if "model_name" in cfg:
+            schema["model_name"] = str
 
         checker = Checker(schema)
         checker.validate(cfg)
@@ -227,13 +226,27 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         # If offset, compute only inner region
         if offset_row_col != 0:
             cv[offset_row_col:-offset_row_col, offset_row_col:-offset_row_col, :] = run_mc_cnn_fast(
-                selected_band_left, selected_band_right, disp_min, disp_max, self._model_path,
-                framework=self._framework, variant=self._variant, provider=self._provider
+                selected_band_left,
+                selected_band_right,
+                disp_min,
+                disp_max,
+                self._model_path,
+                framework=self._framework,
+                variant=self._variant,
+                provider=self._provider,
+                model_name=self.cfg.get("model_name"),
             )
         else:
             cv = run_mc_cnn_fast(
-                selected_band_left, selected_band_right, disp_min, disp_max, self._model_path,
-                framework=self._framework, variant=self._variant, provider=self._provider
+                selected_band_left,
+                selected_band_right,
+                disp_min,
+                disp_max,
+                self._model_path,
+                framework=self._framework,
+                variant=self._variant,
+                provider=self._provider,
+                model_name=self.cfg.get("model_name"),
             )
 
         index_col = np.asarray(cost_volume.attrs["col_to_compute"])
