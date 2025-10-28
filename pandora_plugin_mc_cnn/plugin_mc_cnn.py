@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2024 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2025 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Pandora plugin MC-CNN
 #
@@ -30,6 +30,7 @@ import xarray as xr
 import numpy as np
 
 from pandora.matching_cost import matching_cost
+from pandora.profiler import profile
 from mc_cnn.run import run_mc_cnn_fast
 from mc_cnn.weights import get_weights
 
@@ -49,6 +50,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
     _MODEL_PATH = str(get_weights())  # Weights file "mc_cnn_fast_mb_weights.pt" in MC-CNN pip package
     _BAND = None
 
+    @profile("mccnn.__init__")
     def __init__(self, **cfg: Union[int, str]):
         """
 
@@ -82,6 +84,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         checker.validate(cfg)
         return cfg
 
+    @profile("mccnn.compute_cost_volume")
     def compute_cost_volume(
         self,
         img_left: xr.Dataset,
