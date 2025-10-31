@@ -147,7 +147,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
             'subpix': int,
             'model_path': str,
             'framework': 'pytorch'|'onnx'|'openvino',
-            'variant': 'baseline'|'opt1'|'opt2'|'cpp'|'cpp2',
+            'variant': 'baseline'|'opt1'|'opt1'|'opt2'|'cpp'|'cpp2',
             'provider': 'cpu_base'|'openvino',
             'model_name': str (optional; used to select a specific ONNX/IR file)
         }
@@ -181,7 +181,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         schema["window_size"] = And(int, lambda x: x == 11)
         schema["model_path"] = And(str, lambda x: os.path.exists(x))
         schema["framework"] = And(str, lambda x: x in ["pytorch", "onnx", "openvino"])
-        schema["variant"] = And(str, lambda x: x in ["baseline", "opt1", "opt2", "cpp", "cpp2", "cpp_notorch", "cpp2_notorch"])
+        schema["variant"] = And(str, lambda x: x in ["baseline", "opt1", "opt1", "opt1_np", "opt2", "opt2_np", "cpp", "cpp2", "cpp_notorch", "cpp2_notorch"])
         schema["provider"] = And(str, lambda x: x in ["cpu_base", "openvino"])
         if "model_name" in cfg:
             schema["model_name"] = str
