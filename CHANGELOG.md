@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.3.5 (November 2025)
+
 ## 1.3.5a1 (October 2025)
 
 ### Added
