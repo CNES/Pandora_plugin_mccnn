@@ -1,31 +1,33 @@
 #!/usr/bin/env python
 # coding: utf8
-#
-# Pandora matching_cost plugin for MC-CNN (CPU-only, frameworks + variants).
-# Emits (stdout for fallback parsing):
-#   - PROFILING_TOTAL_CV: time=...s, mem_peak=...MB, framework=..., variant=...
-#
-# Also writes structured total-stage metrics to:
-#   <PANDORA_RUN_OUTPUT_DIR>/metrics_total.json
-# with:
-#   - total_cv_time, total_cv_mem
-#   - framework, variant
-#
-# Framework (CPU):
-#   - pytorch
-#   - onnx
-#   - openvino
-#
-# Variant:
-#   - baseline
-#   - opt1
-#   - opt2
-#   - cpp (and optionally cpp2)
-#
-# Provider:
-#   - cpu_base
-#   - openvino
-#
+"""
+Pandora matching_cost plugin for MC-CNN (CPU-only, frameworks + variants).
+Supports window_size 7/11/13/15.
+
+Emits (stdout for fallback parsing):
+  - PROFILING_TOTAL_CV: time=...s, mem_peak=...MB, framework=..., variant=..., provider=..., window=...
+
+Also writes structured total-stage metrics to:
+  <PANDORA_RUN_OUTPUT_DIR>/metrics_total.json
+with:
+  - total_cv_time, total_cv_mem, framework, provider, variant, window_size, model_path
+
+Framework (CPU):
+  - pytorch
+  - onnx
+  - openvino
+
+Variant:
+  - baseline
+  - opt1, opt1_notorch
+  - opt2, opt2_notorch
+  - cpp, cpp2, cpp_notorch, cpp2_notorch
+
+Provider:
+  - cpu_base
+  - openvino
+"""
+
 from typing import Dict, Union, Optional
 import os
 import json
@@ -50,13 +52,15 @@ def get_memory_usage_bytes() -> int:
 
 
 def bytes_to_mb(b: int) -> float:
+    """Convert bytes to megabytes."""
     return b / (1024.0 * 1024.0)
 
 
 class MemorySampler:
     """
-    Background sampler to capture true peak RSS during the total MC-CNN stage.
-    Sampling interval can be tuned with env MCCNN_MEM_SAMPLE_SEC (default 0.005s).
+    Background thread to capture peak RSS during MC-CNN execution.
+    
+    Configurable via MCCNN_MEM_SAMPLE_SEC (default: 0.005s).
     """
     def __init__(self, interval_sec: float = None):
         if interval_sec is None:
@@ -64,12 +68,14 @@ class MemorySampler:
                 interval_sec = float(os.getenv("MCCNN_MEM_SAMPLE_SEC", "0.005"))
             except Exception:
                 interval_sec = 0.005
+                
         self.interval = max(0.0005, interval_sec)
         self._stop = threading.Event()
         self._thread = None
         self._peak = 0
 
     def _run(self):
+        """Background sampling loop."""
         proc = psutil.Process()
         while not self._stop.is_set():
             try:
@@ -81,6 +87,7 @@ class MemorySampler:
             time.sleep(self.interval)
 
     def start(self):
+        """Start memory sampling."""
         self._peak = get_memory_usage_bytes()
         self._stop.clear()
         self._thread = threading.Thread(target=self._run, name="mem_sampler_total", daemon=True)
@@ -88,6 +95,7 @@ class MemorySampler:
         return self
 
     def stop(self):
+        """Stop memory sampling."""
         self._stop.set()
         if self._thread is not None:
             try:
@@ -97,26 +105,38 @@ class MemorySampler:
 
     @property
     def peak_mb(self) -> float:
+        """Get peak memory in MB."""
         return bytes_to_mb(self._peak)
 
 
-def _write_metrics_total(framework: str, provider: str, variant: str, total_time: float, total_mem_mb: float) -> None:
-    """
-    Write total-stage metrics JSON to PANDORA_RUN_OUTPUT_DIR if set.
-    """
+def _write_metrics_total(
+    framework: str,
+    provider: str,
+    variant: str,
+    window_size: Optional[int],
+    model_path: Optional[str],
+    total_time: float,
+    total_mem_mb: float
+) -> None:
+    """Write total-stage metrics to metrics_total.json."""
     out_dir = os.getenv("PANDORA_RUN_OUTPUT_DIR", "")
     if not out_dir:
         return
+        
     try:
         p = Path(out_dir).resolve()
         p.mkdir(parents=True, exist_ok=True)
+        
         payload = {
             "framework": framework,
-            "variant": variant,
             "provider": provider,
+            "variant": variant,
+            "window_size": int(window_size) if window_size is not None else None,
+            "model_path": model_path,
             "total_cv_time": float(total_time),
             "total_cv_mem": float(total_mem_mb),
         }
+        
         with open(p / "metrics_total.json", "w") as f:
             json.dump(payload, f, indent=2)
     except Exception:
@@ -126,68 +146,69 @@ def _write_metrics_total(framework: str, provider: str, variant: str, total_time
 @matching_cost.AbstractMatchingCost.register_subclass("mc_cnn")
 class MCCNN(matching_cost.AbstractMatchingCost):
     """
-    MC-CNN plugin that computes a cost volume using MC-CNN fast features and a cosine similarity loop.
-
-    CPU-only baseline (even if a GPU is present).
+    MC-CNN fast plugin for Pandora.
+    
+    Computes cost volume using MC-CNN features and similarity matching.
+    CPU-only implementation.
     """
 
     _WINDOW_SIZE = 11
     _SUBPIX = 1
-    _MODEL_PATH = str(get_weights())  # Pretrained weights from mc_cnn package
+    _MODEL_PATH = str(get_weights())  # Default weights from package
     _BAND = None
-    _FRAMEWORK = "pytorch"  # Default framework (CPU-only)
-    _VARIANT = "baseline"   # Default variant
+    _FRAMEWORK = "pytorch"
+    _VARIANT = "baseline"
     _PROVIDER = "cpu_base"
 
     def __init__(self, **cfg: Union[int, str]):
         """
-        :param cfg: {
-            'matching_cost_method': str,
-            'window_size': int,
-            'subpix': int,
-            'model_path': str,
-            'framework': 'pytorch'|'onnx'|'openvino',
-            'variant': 'baseline'|'opt1'|'opt1'|'opt2'|'cpp'|'cpp2',
-            'provider': 'cpu_base'|'openvino',
-            'model_name': str (optional; used to select a specific ONNX/IR file)
-        }
+        Initialize plugin with configuration.
+        
+        Args:
+            window_size: Patch window size (7, 11, 13, or 15)
+            model_path: Path to trained weights
+            framework: "pytorch", "onnx", or "openvino"
+            variant: Implementation variant
+            provider: ONNX provider ("cpu_base" or "openvino")
+            model_name: Specific model file name
         """
         super().instantiate_class(**cfg)
         self._model_path = str(self.cfg["model_path"])
         self._framework = str(self.cfg.get("framework", self._FRAMEWORK))
         self._variant = str(self.cfg.get("variant", self._VARIANT))
         self._provider = str(self.cfg.get("provider", self._PROVIDER))
+        self._window_size = int(self.cfg.get("window_size", self._WINDOW_SIZE))
 
     def check_conf(self, **cfg: Union[int, str]) -> Dict[str, Union[int, str]]:
-        """
-        Add defaults and validate configuration.
-        """
+        """Validate and fill default configuration values."""
         cfg = super().check_conf(**cfg)
 
-        if "model_path" not in cfg:
-            cfg["model_path"] = self._MODEL_PATH
-
-        if "framework" not in cfg:
-            cfg["framework"] = self._FRAMEWORK
-
-        if "variant" not in cfg:
-            cfg["variant"] = self._VARIANT
-
-        if "provider" not in cfg:
-            cfg["provider"] = self._PROVIDER
+        # Set defaults
+        cfg.setdefault("model_path", self._MODEL_PATH)
+        cfg.setdefault("framework", self._FRAMEWORK)
+        cfg.setdefault("variant", self._VARIANT)
+        cfg.setdefault("provider", self._PROVIDER)
+        cfg.setdefault("window_size", self._WINDOW_SIZE)
 
         schema = self.schema
         schema["matching_cost_method"] = And(str, lambda x: x == "mc_cnn")
-        schema["window_size"] = And(int, lambda x: x == 11)
+        schema["window_size"] = And(int, lambda x: x in (7, 11, 13, 15))
         schema["model_path"] = And(str, lambda x: os.path.exists(x))
         schema["framework"] = And(str, lambda x: x in ["pytorch", "onnx", "openvino"])
-        schema["variant"] = And(str, lambda x: x in ["baseline", "opt1", "opt1", "opt1_notorch", "opt2", "opt2_notorch", "cpp", "cpp2", "cpp_notorch", "cpp2_notorch"])
+        schema["variant"] = And(str, lambda x: x in [
+            "baseline",
+            "opt1", "opt1_notorch",
+            "opt2", "opt2_notorch",
+            "cpp", "cpp2", "cpp_notorch", "cpp2_notorch",
+        ])
         schema["provider"] = And(str, lambda x: x in ["cpu_base", "openvino"])
+        
         if "model_name" in cfg:
             schema["model_name"] = str
 
         checker = Checker(schema)
         checker.validate(cfg)
+        
         return cfg
 
     def compute_cost_volume(
@@ -197,33 +218,34 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         cost_volume: xr.Dataset,
     ) -> xr.Dataset:
         """
-        Compute cost volume for a pair of images using MC-CNN fast features (CPU-only).
-        Emits PROFILING_TOTAL_CV marker with total time/memory.
-        Writes metrics_total.json with total_cv_time and total_cv_mem (true peak within this function).
+        Compute cost volume for stereo pair.
+        
+        Emits PROFILING_TOTAL_CV marker and writes metrics_total.json.
         """
-        # Profiling (total) with true peak sampler
+        # Start total profiling
         ms_total = MemorySampler().start()
         start_total = time.perf_counter()
 
-        # Check band parameter
+        # Validate band input
         self.check_band_input_mc(img_left, img_right)
 
-        # Select band(s) if multi-band
-        selected_band_left = get_band_values(img_left, self._band)
-        selected_band_right = get_band_values(img_right, self._band)
+        # Select band
+        selected_band_left = get_band_values(img_left, self._BAND)
+        selected_band_right = get_band_values(img_right, self._BAND)
 
+        # Disparity range
         disparity_range = cost_volume.coords["disp"].data
         disp_min, disp_max = int(disparity_range[0]), int(disparity_range[-1])
         offset_row_col = int(cost_volume.attrs["offset_row_col"])
 
-        # Prepare CV container, filled with NaN by default
+        # Prepare cost volume
         cv = np.full(
             (selected_band_left.shape[0], selected_band_left.shape[1], len(disparity_range)),
             np.nan,
             dtype=np.float32,
         )
 
-        # If offset, compute only inner region
+        # Compute cost volume (inner region or full frame)
         if offset_row_col != 0:
             cv[offset_row_col:-offset_row_col, offset_row_col:-offset_row_col, :] = run_mc_cnn_fast(
                 selected_band_left,
@@ -249,22 +271,18 @@ class MCCNN(matching_cost.AbstractMatchingCost):
                 model_name=self.cfg.get("model_name"),
             )
 
+        # Apply column selection
         index_col = np.asarray(cost_volume.attrs["col_to_compute"])
-        # Rebase if first column coordinate != 0
         index_col = index_col - img_left.coords["col"].data[0]
-
-        # Fill Pandora cost volume slice (row, col_to_compute, disp)
         cost_volume["cost_volume"].data = cv[:, index_col, :]
 
-        # Metadata
-        cost_volume.attrs.update(
-            {
-                "type_measure": "min",
-                "cmax": 1,
-            }
-        )
+        # Update metadata
+        cost_volume.attrs.update({
+            "type_measure": "min",
+            "cmax": 1,
+        })
 
-        # Stop total timer and sampler BEFORE any optional disk I/O
+        # Finish profiling
         time_total = time.perf_counter() - start_total
         ms_total.stop()
         mem_total_peak = ms_total.peak_mb
@@ -272,13 +290,21 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         # Emit marker
         print(
             f"PROFILING_TOTAL_CV: time={time_total:.4f}s, mem_peak={mem_total_peak:.2f}MB, "
-            f"framework={self._framework}, variant={self._variant}"
+            f"framework={self._framework}, variant={self._variant}, provider={self._provider}, window={self._window_size}"
         )
 
-        # Write structured total metrics
-        _write_metrics_total(self._framework, self._provider, self._variant, time_total, mem_total_peak)
+        # Write metrics
+        _write_metrics_total(
+            self._framework,
+            self._provider,
+            self._variant,
+            self._window_size,
+            self._model_path,
+            time_total,
+            mem_total_peak
+        )
 
-        # Optional dump of the computed CV (for correctness checks) — NOT INCLUDED in timing
+        # Optional CV dump for debugging
         if os.getenv("MCCNN_DUMP_CV", "0") in ("1", "true", "True"):
             out_dir_env = os.getenv("PANDORA_RUN_OUTPUT_DIR", "")
             if out_dir_env:
@@ -287,7 +313,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
                     out_dir.mkdir(parents=True, exist_ok=True)
                     np.save(out_dir / "mc_cnn_cv.npy", cv)
                 except Exception:
-                    # Silent failure on dump to keep baseline simple
                     pass
 
         return cost_volume
