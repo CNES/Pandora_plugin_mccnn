@@ -40,6 +40,7 @@ import psutil
 
 from pandora.img_tools import shift_right_img
 from pandora.matching_cost import matching_cost
+from pandora.profiler import profile
 from mc_cnn.run import run_mc_cnn_fast
 from mc_cnn.weights import get_weights
 
@@ -139,6 +140,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
     _VARIANT = "baseline"   # Default variant
     _PROVIDER = "cpu_base"
 
+    @profile("mc_cnn.__init__")
     def __init__(self, **cfg: Union[int, str]):
         """
         :param cfg: {
@@ -196,6 +198,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         checker.validate(cfg)
         return cfg
 
+    @profile("mc_cnn.compute_cost_volume")
     def compute_cost_volume(
         self,
         img_left: xr.Dataset,
