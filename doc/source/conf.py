@@ -35,7 +35,6 @@ sys.path.insert(0, os.path.abspath("../plugin_mc-cnn"))
 sys.setrecursionlimit(8 * sys.getrecursionlimit())
 
 
-
 # -- Project information -----------------------------------------------------
 
 project = "Pandora Plugin Mccnn"

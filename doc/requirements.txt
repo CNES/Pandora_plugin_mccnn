@@ -1,0 +1,4 @@
+# Requirements for Gitlab CI
+sphinx
+sphinx_rtd_theme
+sphinx_autoapi
