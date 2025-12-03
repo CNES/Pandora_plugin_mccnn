@@ -25,7 +25,7 @@ This module contains all functions to calculate the cost volume with mc-cnn netw
 
 from typing import Dict, Union, Optional
 import os
-from json_checker import Checker, And, Or
+from json_checker import Checker, And
 import xarray as xr
 import numpy as np
 
