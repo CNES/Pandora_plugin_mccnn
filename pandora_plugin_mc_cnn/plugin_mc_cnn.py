@@ -137,10 +137,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
                 else:
                     imgs_right_shift_np.append(img["im"].data)
 
-
-        # selected_band_left = get_band_values(img_left, self._band)
-        # selected_band_right = get_band_values(img_right, self._band)
-
         disparity_range = cost_volume.coords["disp"].data
         disp_min, disp_max = disparity_range[0], disparity_range[-1]
         offset_row_col = cost_volume.attrs["offset_row_col"]
@@ -159,10 +155,11 @@ class MCCNN(matching_cost.AbstractMatchingCost):
                                               axis=1)
             
             if offset_row_col != 0:
-                cv[offset_row_col:-offset_row_col, offset_row_col:-offset_row_col, idx_right::self._subpix] = run_mc_cnn_fast(
-                    img_left_np.astype(np.float32), img_right_np.astype(np.float32),
-                    disp_min, disp_max, self._model_path
-                )
+                cv[offset_row_col:-offset_row_col, offset_row_col:-offset_row_col,
+                   idx_right::self._subpix] = run_mc_cnn_fast(
+                       img_left_np.astype(np.float32), img_right_np.astype(np.float32),
+                       disp_min, disp_max, self._model_path
+                   )
             else:
                 cv[:, :, idx_right::self._subpix] = run_mc_cnn_fast(
                     img_left_np.astype(np.float32), img_right_np.astype(np.float32),
