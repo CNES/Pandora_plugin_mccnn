@@ -46,7 +46,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
     """
 
     _WINDOW_SIZE = 11
-    # _SUBPIX = 1
     # Path to the pretrained model
     _MODEL_PATH = str(get_weights())  # Weights file "mc_cnn_fast_mb_weights.pt" in MC-CNN pip package
     _BAND = None
@@ -155,7 +154,8 @@ class MCCNN(matching_cost.AbstractMatchingCost):
             img_right_np = imgs_right_shift_np[idx_right]
 
             if idx_right > 0:
-                img_right_np = np.concatenate((img_right_np, np.full((img_right_np.shape[0], 1), np.nan)),
+                img_right_np = np.concatenate((img_right_np,
+                                               np.full((img_right_np.shape[0], 1), 0)),
                                               axis=1)
             
             if offset_row_col != 0:
@@ -182,7 +182,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
                 "cmax": 1,
             }
         )
-
+        
         return cost_volume
 
 
