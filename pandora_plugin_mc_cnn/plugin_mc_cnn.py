@@ -141,29 +141,37 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         disp_min, disp_max = disparity_range[0], disparity_range[-1]
         offset_row_col = cost_volume.attrs["offset_row_col"]
 
-        cv = np.full(
-            (img_left_np.shape[0], img_left_np.shape[1], len(disparity_range)), np.nan, dtype=np.float32
-        )
+        cv = np.full((img_left_np.shape[0], img_left_np.shape[1], len(disparity_range)), np.nan, dtype=np.float32)
 
         # If offset, do not consider border position for cost computation
         for idx_right in range(self._subpix):
             img_right_np = imgs_right_shift_np[idx_right]
 
             if idx_right > 0:
-                img_right_np = np.concatenate((img_right_np,
-                                               np.full((img_right_np.shape[0], 1), 0)),
-                                              axis=1)
-            
+                # If the image has been shifted, the last line is removed,
+                #   which is not compatible with the network's input shape.
+                # In that case, we add a column of NaN (with a value).
+                # The value is not NaN due to issues with the network.
+                img_right_np = np.concatenate((img_right_np, np.full((img_right_np.shape[0], 1), 0)), axis=1)
+
             if offset_row_col != 0:
-                cv[offset_row_col:-offset_row_col, offset_row_col:-offset_row_col,
-                   idx_right::self._subpix] = run_mc_cnn_fast(
-                       img_left_np.astype(np.float32), img_right_np.astype(np.float32),
-                       disp_min, disp_max, self._model_path
-                   )
+                cv[offset_row_col:-offset_row_col, offset_row_col:-offset_row_col, idx_right :: self._subpix] = (
+                    run_mc_cnn_fast(
+                        img_left_np.astype(np.float32),
+                        img_right_np.astype(np.float32),
+                        disp_min,
+                        disp_max,
+                        self._model_path,
+                    )
+                )
             else:
-                cv[:, :, idx_right::self._subpix] = run_mc_cnn_fast(
-                    img_left_np.astype(np.float32), img_right_np.astype(np.float32),
-                    disp_min, disp_max, self._model_path)
+                cv[:, :, idx_right :: self._subpix] = run_mc_cnn_fast(
+                    img_left_np.astype(np.float32),
+                    img_right_np.astype(np.float32),
+                    disp_min,
+                    disp_max,
+                    self._model_path,
+                )
 
             # For subpix step, remove latest disparity (replaced by a column of NaNs)
             if idx_right == 0:
@@ -179,20 +187,5 @@ class MCCNN(matching_cost.AbstractMatchingCost):
                 "cmax": 1,
             }
         )
-        
+
         return cost_volume
-
-
-def get_band_values(image_dataset: xr.Dataset, band_name: Optional[str] = None) -> np.ndarray:
-    """
-     Get values of given band_name from image_dataset as numpy array.
-
-    :param image_dataset: image dataset
-    :type image_dataset: xr.Dataset with band_im coordinate
-    :param band_name: nome of the band to extract. If None (default) return all bands values.
-    :type band_name: str
-    :return: selected band
-    :rtype: np.ndarray
-    """
-    selection = image_dataset if band_name is None else image_dataset.sel(band_im=band_name)
-    return selection["im"].to_numpy()
