@@ -35,7 +35,7 @@ import pandora
 from pandora import matching_cost
 from pandora.criteria import validity_mask
 from pandora.img_tools import add_disparity
-from pandora_plugin_mc_cnn.plugin_mc_cnn import MCCNN, get_band_values  # pylint: disable=unused-import
+from pandora_plugin_mc_cnn.plugin_mc_cnn import MCCNN  # pylint: disable=unused-import
 
 
 # pylint: disable=unsubscriptable-object
@@ -552,48 +552,6 @@ class TestPlugin(unittest.TestCase):
 
         # Check if the calculated cost volume is equal to the ground truth (same shape and all elements equals)
         np.testing.assert_allclose(cv["cost_volume"].data, cv_ground_truth, rtol=1e-06)
-
-
-@pytest.mark.parametrize(
-    ["band_name", "expected"],
-    [
-        (None, np.array([[[1, 1], [1, 1]], [[2, 2], [2, 2]], [[3, 3], [3, 3]]], dtype=np.float32)),
-        ("r", np.array([[1, 1], [1, 1]], dtype=np.float32)),
-        ("g", np.array([[2, 2], [2, 2]], dtype=np.float32)),
-        ("b", np.array([[3, 3], [3, 3]], dtype=np.float32)),
-    ],
-)
-def test_get_band_values(band_name, expected):
-    """Given a band_name, test we get expected band values."""
-    data = np.array(
-        [
-            [
-                [1, 1],
-                [1, 1],
-            ],
-            [
-                [2, 2],
-                [2, 2],
-            ],
-            [
-                [3, 3],
-                [3, 3],
-            ],
-        ],
-        dtype=np.float32,
-    )
-    input_dataset = xr.Dataset(
-        {"im": (["band_im", "row", "col"], data)},
-        coords={
-            "band_im": ["r", "g", "b"],
-            "row": np.arange(2),
-            "col": np.arange(2),
-        },
-    )
-
-    result = get_band_values(input_dataset, band_name)
-
-    np.testing.assert_array_equal(result, expected)
 
 
 if __name__ == "__main__":
