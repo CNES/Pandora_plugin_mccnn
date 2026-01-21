@@ -26,7 +26,6 @@ This module contains functions to test Pandora + plugin_mc-cnn
 from tempfile import TemporaryDirectory
 import unittest
 
-import pytest
 import rasterio
 import numpy as np
 import xarray as xr

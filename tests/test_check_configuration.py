@@ -19,6 +19,7 @@
 """
 This module contains functions to test the plugin configuration.
 """
+# pylint: disable=redefined-outer-name
 
 import json_checker
 import pytest
@@ -44,6 +45,7 @@ class TestWindowSize:
 
     @pytest.mark.parametrize("window_cfg", [{}, {"window_size": 11}])
     def test_nominal_case(self, window_cfg, basic_cfg):
+        """Test with nominal case"""
         basic_cfg.update(window_cfg)
         matching_cost.AbstractMatchingCost(**basic_cfg)
 
@@ -58,6 +60,7 @@ class TestWindowSize:
         ],
     )
     def test_fails(self, window_cfg, basic_cfg):
+        """Test wrong window value"""
         basic_cfg.update(window_cfg)
         with pytest.raises(json_checker.core.exceptions.DictCheckerError) as err:
             matching_cost.AbstractMatchingCost(**basic_cfg)
@@ -70,9 +73,11 @@ class TestModelPath:
     """
 
     def test_nominal_case_without_param(self, basic_cfg):
+        """Test without model_path parameter"""
         matching_cost.AbstractMatchingCost(**basic_cfg)
 
     def test_nominal_case_with_param(self, model_path, basic_cfg):
+        """Test a valid model_path parameter"""
         basic_cfg.update({"model_path": model_path})
         matching_cost.AbstractMatchingCost(**basic_cfg)
 
@@ -87,6 +92,7 @@ class TestModelPath:
         ],
     )
     def test_fails(self, model_path_cfg, basic_cfg):
+        """Test wrong model_path value"""
         basic_cfg.update(model_path_cfg)
         with pytest.raises(json_checker.core.exceptions.DictCheckerError) as err:
             matching_cost.AbstractMatchingCost(**basic_cfg)
