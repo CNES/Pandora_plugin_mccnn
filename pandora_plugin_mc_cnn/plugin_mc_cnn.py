@@ -23,12 +23,13 @@
 This module contains all functions to calculate the cost volume with mc-cnn networks
 """
 
-from typing import Dict, Union, Optional
+from typing import Dict, Union
 import os
 from json_checker import Checker, And
 import xarray as xr
 import numpy as np
 
+from pandora.img_tools import shift_right_img
 from pandora.matching_cost import matching_cost
 from pandora.profiler import profile
 from mc_cnn.run import run_mc_cnn_fast
@@ -45,7 +46,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
     """
 
     _WINDOW_SIZE = 11
-    _SUBPIX = 1
     # Path to the pretrained model
     _MODEL_PATH = str(get_weights())  # Weights file "mc_cnn_fast_mb_weights.pt" in MC-CNN pip package
     _BAND = None
@@ -120,24 +120,62 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         # check band parameter
         self.check_band_input_mc(img_left, img_right)
 
+        # Contains the shifted right images
+        imgs_right_shift = shift_right_img(img_right, self._subpix, self._band, self._spline_order)
+
         # If multiband, select the corresponding band
-        selected_band_left = get_band_values(img_left, self._band)
-        selected_band_right = get_band_values(img_right, self._band)
+        if self._band is None:
+            img_left_np = img_left["im"].data
+            imgs_right_shift_np = [img["im"].data for img in imgs_right_shift]
+        else:
+            band_index = list(img_left.band_im.data).index(self._band)
+            img_left_np = img_left["im"].data[band_index, :, :]
+            imgs_right_shift_np = []
+            for img in imgs_right_shift:
+                if "band_im" in img:
+                    imgs_right_shift_np.append(img["im"].data[band_index, :, :])
+                else:
+                    imgs_right_shift_np.append(img["im"].data)
 
         disparity_range = cost_volume.coords["disp"].data
         disp_min, disp_max = disparity_range[0], disparity_range[-1]
         offset_row_col = cost_volume.attrs["offset_row_col"]
-        cv = np.full(
-            (selected_band_left.shape[0], selected_band_left.shape[1], len(disparity_range)), np.nan, dtype=np.float32
-        )
+
+        cv = np.full((img_left_np.shape[0], img_left_np.shape[1], len(disparity_range)), np.nan, dtype=np.float32)
 
         # If offset, do not consider border position for cost computation
-        if offset_row_col != 0:
-            cv[offset_row_col:-offset_row_col, offset_row_col:-offset_row_col, :] = run_mc_cnn_fast(
-                selected_band_left, selected_band_right, disp_min, disp_max, self._model_path
-            )
-        else:
-            cv = run_mc_cnn_fast(selected_band_left, selected_band_right, disp_min, disp_max, self._model_path)
+        for idx_right in range(self._subpix):
+            img_right_np = imgs_right_shift_np[idx_right]
+
+            if idx_right > 0:
+                # If the image has been shifted, the last line is removed,
+                #   which is not compatible with the network's input shape.
+                # In that case, we add a column of NaN (with a value).
+                # The value is not NaN due to issues with the network.
+                img_right_np = np.concatenate((img_right_np, np.full((img_right_np.shape[0], 1), 0)), axis=1)
+
+            if offset_row_col != 0:
+                cv[offset_row_col:-offset_row_col, offset_row_col:-offset_row_col, idx_right :: self._subpix] = (
+                    run_mc_cnn_fast(
+                        img_left_np.astype(np.float32),
+                        img_right_np.astype(np.float32),
+                        disp_min,
+                        disp_max,
+                        self._model_path,
+                    )
+                )
+            else:
+                cv[:, :, idx_right :: self._subpix] = run_mc_cnn_fast(
+                    img_left_np.astype(np.float32),
+                    img_right_np.astype(np.float32),
+                    disp_min,
+                    disp_max,
+                    self._model_path,
+                )
+
+            # For subpix step, remove latest disparity (replaced by a column of NaNs)
+            if idx_right == 0:
+                disp_max -= 1
 
         index_col = cost_volume.attrs["col_to_compute"]
         index_col = index_col - img_left.coords["col"].data[0]  # If first col coordinate is not 0
@@ -151,18 +189,3 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         )
 
         return cost_volume
-
-
-def get_band_values(image_dataset: xr.Dataset, band_name: Optional[str] = None) -> np.ndarray:
-    """
-     Get values of given band_name from image_dataset as numpy array.
-
-    :param image_dataset: image dataset
-    :type image_dataset: xr.Dataset with band_im coordinate
-    :param band_name: nome of the band to extract. If None (default) return all bands values.
-    :type band_name: str
-    :return: selected band
-    :rtype: np.ndarray
-    """
-    selection = image_dataset if band_name is None else image_dataset.sel(band_im=band_name)
-    return selection["im"].to_numpy()
