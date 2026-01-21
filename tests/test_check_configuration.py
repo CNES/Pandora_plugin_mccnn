@@ -19,6 +19,7 @@
 """
 This module contains functions to test the plugin configuration.
 """
+
 # pylint: disable=redefined-outer-name
 
 import json_checker
