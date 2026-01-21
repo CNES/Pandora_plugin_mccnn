@@ -23,7 +23,7 @@
 This module contains all functions to calculate the cost volume with mc-cnn networks
 """
 
-from typing import Dict, Union, Optional
+from typing import Dict, Union
 import os
 from json_checker import Checker, And
 import xarray as xr
