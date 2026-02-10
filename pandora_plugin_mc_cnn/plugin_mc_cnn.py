@@ -185,18 +185,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
             }
         )
 
-        # Optional dump of the computed CV (for correctness checks) — NOT INCLUDED in timing
-        if os.getenv("MCCNN_DUMP_CV", "0") in ("1", "true", "True"):
-            out_dir_env = os.getenv("PANDORA_RUN_OUTPUT_DIR", "")
-            if out_dir_env:
-                out_dir = Path(out_dir_env)
-                try:
-                    out_dir.mkdir(parents=True, exist_ok=True)
-                    np.save(out_dir / "mc_cnn_cv.npy", cv_full)
-                except Exception:
-                    # Silent failure on dump to keep baseline simple
-                    pass
-
         return cost_volume
 
 
