@@ -27,93 +27,12 @@ from pathlib import Path
 from json_checker import Checker, And
 import xarray as xr
 import numpy as np
-import psutil
 
 from pandora.img_tools import shift_right_img
 from pandora.matching_cost import matching_cost
 from pandora.profiler import profile
 from mc_cnn.run import run_mc_cnn_fast
 from mc_cnn.weights import get_weights
-
-
-def get_memory_usage_bytes() -> int:
-    """Get current process RSS in bytes."""
-    return psutil.Process().memory_info().rss
-
-
-def bytes_to_mb(b: int) -> float:
-    return b / (1024.0 * 1024.0)
-
-
-class MemorySampler:
-    """
-    Background sampler to capture true peak RSS during the total MC-CNN stage.
-    Sampling interval can be tuned with env MCCNN_MEM_SAMPLE_SEC (default 0.005s).
-    """
-    def __init__(self, interval_sec: float = None):
-        if interval_sec is None:
-            try:
-                interval_sec = float(os.getenv("MCCNN_MEM_SAMPLE_SEC", "0.005"))
-            except Exception:
-                interval_sec = 0.005
-        self.interval = max(0.0005, interval_sec)
-        self._stop = threading.Event()
-        self._thread = None
-        self._peak = 0
-
-    def _run(self):
-        proc = psutil.Process()
-        while not self._stop.is_set():
-            try:
-                rss = proc.memory_info().rss
-                if rss > self._peak:
-                    self._peak = rss
-            except Exception:
-                pass
-            time.sleep(self.interval)
-
-    def start(self):
-        self._peak = get_memory_usage_bytes()
-        self._stop.clear()
-        self._thread = threading.Thread(target=self._run, name="mem_sampler_total", daemon=True)
-        self._thread.start()
-        return self
-
-    def stop(self):
-        self._stop.set()
-        if self._thread is not None:
-            try:
-                self._thread.join()
-            except Exception:
-                pass
-
-    @property
-    def peak_mb(self) -> float:
-        return bytes_to_mb(self._peak)
-
-
-def _write_metrics_total(framework: str, provider: str, variant: str, total_time: float, total_mem_mb: float) -> None:
-    """
-    Write total-stage metrics JSON to PANDORA_RUN_OUTPUT_DIR if set.
-    """
-    out_dir = os.getenv("PANDORA_RUN_OUTPUT_DIR", "")
-    if not out_dir:
-        return
-    try:
-        p = Path(out_dir).resolve()
-        p.mkdir(parents=True, exist_ok=True)
-        payload = {
-            "framework": framework,
-            "variant": variant,
-            "provider": provider,
-            "total_cv_time": float(total_time),
-            "total_cv_mem": float(total_mem_mb),
-        }
-        with open(p / "metrics_total.json", "w") as f:
-            json.dump(payload, f, indent=2)
-    except Exception:
-        pass
-
 
 @matching_cost.AbstractMatchingCost.register_subclass("mc_cnn")
 class MCCNN(matching_cost.AbstractMatchingCost):
@@ -201,10 +120,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         Emits PROFILING_TOTAL_CV marker with total time/memory.
         Writes metrics_total.json with total_cv_time and total_cv_mem (true peak within this function).
         """
-        # Profiling (total) with true peak sampler
-        ms_total = MemorySampler().start()
-        start_total = time.perf_counter()
-
         # Check band parameter
         self.check_band_input_mc(img_left, img_right)
 
@@ -269,20 +184,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
                 "cmax": 1,
             }
         )
-
-        # Stop total timer and sampler BEFORE any optional disk I/O
-        time_total = time.perf_counter() - start_total
-        ms_total.stop()
-        mem_total_peak = ms_total.peak_mb
-
-        # Emit marker
-        print(
-            f"PROFILING_TOTAL_CV: time={time_total:.4f}s, mem_peak={mem_total_peak:.2f}MB, "
-            f"framework={self._framework}, variant={self._variant}"
-        )
-
-        # Write structured total metrics
-        _write_metrics_total(self._framework, self._provider, self._variant, time_total, mem_total_peak)
 
         # Optional dump of the computed CV (for correctness checks) — NOT INCLUDED in timing
         if os.getenv("MCCNN_DUMP_CV", "0") in ("1", "true", "True"):
