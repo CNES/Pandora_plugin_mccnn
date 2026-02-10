@@ -1,31 +1,22 @@
-#!/usr/bin/env python
-# coding: utf8
+# Copyright (c) 2026 Centre National d'Etudes Spatiales (CNES).
 #
-# Pandora matching_cost plugin for MC-CNN (CPU-only, frameworks + variants).
-# Emits (stdout for fallback parsing):
-#   - PROFILING_TOTAL_CV: time=...s, mem_peak=...MB, framework=..., variant=...
+# This file is part of Pandora plugin MC-CNN
 #
-# Also writes structured total-stage metrics to:
-#   <PANDORA_RUN_OUTPUT_DIR>/metrics_total.json
-# with:
-#   - total_cv_time, total_cv_mem
-#   - framework, provider, variant
+#     https://github.com/CNES/Pandora_plugin_mccnn
 #
-# Framework (CPU):
-#   - pytorch
-#   - onnx
-#   - openvino
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# Variant:
-#   - baseline
-#   - opt1
-#   - opt2
-#   - cpp (and optionally cpp2)
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# Provider:
-#   - cpu_base
-#   - openvino
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
+
 from typing import Dict, Union, Optional
 import os
 import json
