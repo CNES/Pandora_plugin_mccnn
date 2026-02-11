@@ -19,16 +19,11 @@
 
 from typing import Dict, Union, Optional
 import os
-import json
-import time
-import threading
-from pathlib import Path
 
 from json_checker import Checker, And
 import xarray as xr
 import numpy as np
 
-from pandora.img_tools import shift_right_img
 from pandora.matching_cost import matching_cost
 from pandora.profiler import profile
 from mc_cnn.run import run_mc_cnn_fast
