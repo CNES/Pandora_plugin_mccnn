@@ -47,9 +47,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
     _SUBPIX = 1
     _MODEL_PATH = str(get_weights())  # Pretrained weights from mc_cnn package
     _BAND = None
-    _FRAMEWORK = "pytorch"  # Default framework (CPU-only)
-    _VARIANT = "baseline"  # Default variant
-    _PROVIDER = "cpu_base"
 
     @profile("mc_cnn.__init__")
     def __init__(self, **cfg: Union[int, str]):
@@ -59,17 +56,11 @@ class MCCNN(matching_cost.AbstractMatchingCost):
             'window_size': int,
             'subpix': int,
             'model_path': str,
-            'framework': 'pytorch'|'onnx'|'openvino',
-            'variant': 'baseline'|'opt1'|'opt2'|'cpp'|'cpp2'|'opt1_notorch'|'opt2_notorch'|'cpp_notorch'|'cpp2_notorch',
-            'provider': 'cpu_base'|'openvino',
             'model_name': str (optional; used to select a specific ONNX/IR file)
         }
         """
         super().instantiate_class(**cfg)
         self._model_path = str(self.cfg["model_path"])
-        self._framework = str(self.cfg.get("framework", self._FRAMEWORK))
-        self._variant = str(self.cfg.get("variant", self._VARIANT))
-        self._provider = str(self.cfg.get("provider", self._PROVIDER))
         # keep the configured window size (Pandora is the source of truth)
         self._window_size = int(self.cfg.get("window_size", self._WINDOW_SIZE))
 
@@ -83,15 +74,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         if "model_path" not in cfg:
             cfg["model_path"] = self._MODEL_PATH
 
-        if "framework" not in cfg:
-            cfg["framework"] = self._FRAMEWORK
-
-        if "variant" not in cfg:
-            cfg["variant"] = self._VARIANT
-
-        if "provider" not in cfg:
-            cfg["provider"] = self._PROVIDER
-
         if "window_size" not in cfg:
             cfg["window_size"] = self._WINDOW_SIZE  # default if not provided
 
@@ -99,25 +81,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         schema["matching_cost_method"] = And(str, lambda x: x == "mc_cnn")
         schema["window_size"] = And(int, lambda x: x in [7, 11, 13, 15])
         schema["model_path"] = And(str, lambda x: os.path.exists(x))
-        schema["framework"] = And(str, lambda x: x in ["pytorch", "onnx", "openvino"])
-        schema["variant"] = And(
-            str,
-            lambda x: x
-            in [
-                "baseline",
-                "opt1",
-                "opt1_notorch",
-                "opt2",
-                "opt2_notorch",
-                "cpp",
-                "cpp2",
-                "cpp_notorch",
-                "cpp2_notorch",
-            ],
-        )
-        schema["provider"] = And(str, lambda x: x in ["cpu_base", "openvino"])
-        if "model_name" in cfg:
-            schema["model_name"] = str
 
         checker = Checker(schema)
         checker.validate(cfg)
@@ -158,18 +121,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         # Run backend (returns (row_cost_volume, col_cost_volume, disparity)
         # with row_cost_volume=row-2 * n_conv_layer,
         # col_cost_volume=col-2 * n_conv_layer for L conv layers)
-        computed_cv = run_mc_cnn_fast(
-            selected_band_left,
-            selected_band_right,
-            disp_min,
-            disp_max,
-            self._model_path,
-            framework=self._framework,
-            variant=self._variant,
-            provider=self._provider,
-            model_name=self.cfg.get("model_name"),
-            window_size=window_size,  # pass configured window size to backend
-        )
+        computed_cv = run_mc_cnn_fast(selected_band_left, selected_band_right, disp_min, disp_max, self.cfg)
 
         # Validate backend output size vs configured window size
         row_cost_volume, col_cost_volume = computed_cv.shape[:2]
