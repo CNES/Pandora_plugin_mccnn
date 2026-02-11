@@ -34,6 +34,7 @@ from pandora.profiler import profile
 from mc_cnn.run import run_mc_cnn_fast
 from mc_cnn.weights import get_weights
 
+
 @matching_cost.AbstractMatchingCost.register_subclass("mc_cnn")
 class MCCNN(matching_cost.AbstractMatchingCost):
     """
@@ -47,7 +48,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
     _MODEL_PATH = str(get_weights())  # Pretrained weights from mc_cnn package
     _BAND = None
     _FRAMEWORK = "pytorch"  # Default framework (CPU-only)
-    _VARIANT = "baseline"   # Default variant
+    _VARIANT = "baseline"  # Default variant
     _PROVIDER = "cpu_base"
 
     @profile("mc_cnn.__init__")
@@ -99,7 +100,21 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         schema["window_size"] = And(int, lambda x: x in [7, 11, 13, 15])
         schema["model_path"] = And(str, lambda x: os.path.exists(x))
         schema["framework"] = And(str, lambda x: x in ["pytorch", "onnx", "openvino"])
-        schema["variant"] = And(str, lambda x: x in ["baseline", "opt1", "opt1_notorch", "opt2", "opt2_notorch", "cpp", "cpp2", "cpp_notorch", "cpp2_notorch"])
+        schema["variant"] = And(
+            str,
+            lambda x: x
+            in [
+                "baseline",
+                "opt1",
+                "opt1_notorch",
+                "opt2",
+                "opt2_notorch",
+                "cpp",
+                "cpp2",
+                "cpp_notorch",
+                "cpp2_notorch",
+            ],
+        )
         schema["provider"] = And(str, lambda x: x in ["cpu_base", "openvino"])
         if "model_name" in cfg:
             schema["model_name"] = str
@@ -127,20 +142,22 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         selected_band_left = get_band_values(img_left, self._band)
         selected_band_right = get_band_values(img_right, self._band)
 
-        # Disparity range (Pandora allocates D planes)
+        # Disparity range (Pandora allocates disparity planes)
         disparity_range = cost_volume.coords["disp"].data
         disp_min, disp_max = int(disparity_range[0]), int(disparity_range[-1])
-        D = len(disparity_range)
+        disparity = len(disparity_range)
 
-        # Full canvas (H, W, D) initialized with NaN
-        H, W = selected_band_left.shape[:2]
-        cv_full = np.full((H, W, D), np.nan, dtype=np.float32)
+        # Full canvas (row, col, disparity) initialized with NaN
+        row, col = selected_band_left.shape[:2]
+        cost_volume_full = np.full((row, col, disparity), np.nan, dtype=np.float32)
 
         # Expected shrink from configured window size
-        ws = int(self.cfg.get("window_size", self._WINDOW_SIZE))
-        L = max(0, (ws - 1) // 2)
+        window_size = int(self.cfg.get("window_size", self._WINDOW_SIZE))
+        n_conv_layer = max(0, (window_size - 1) // 2)
 
-        # Run backend (returns (Hc, Wc, D) with Hc=H-2L, Wc=W-2L for L conv layers)
+        # Run backend (returns (row_cost_volume, col_cost_volume, disparity)
+        # with row_cost_volume=row-2 * n_conv_layer,
+        # col_cost_volume=col-2 * n_conv_layer for L conv layers)
         computed_cv = run_mc_cnn_fast(
             selected_band_left,
             selected_band_right,
@@ -151,23 +168,26 @@ class MCCNN(matching_cost.AbstractMatchingCost):
             variant=self._variant,
             provider=self._provider,
             model_name=self.cfg.get("model_name"),
-            window_size=ws,  # pass configured window size to backend
+            window_size=window_size,  # pass configured window size to backend
         )
 
         # Validate backend output size vs configured window size
-        Hc, Wc = computed_cv.shape[:2]
-        expected_Hc, expected_Wc = H - 2 * L, W - 2 * L
-        if (Hc, Wc) != (expected_Hc, expected_Wc):
+        row_cost_volume, col_cost_volume = computed_cv.shape[:2]
+        expected_row_cost_volume, expected_col_cost_volume = row - 2 * n_conv_layer, col - 2 * n_conv_layer
+        if (row_cost_volume, col_cost_volume) != (expected_row_cost_volume, expected_col_cost_volume):
             raise ValueError(
-                f"MC-CNN backend output shape mismatch: got ({Hc},{Wc}), expected ({expected_Hc},{expected_Wc}) "
-                f"for window_size={ws} (L={(ws - 1)//2}). "
+                f"MC-CNN backend output shape mismatch: got ({row_cost_volume},{col_cost_volume}), "
+                f"expected ({expected_row_cost_volume},{expected_col_cost_volume}) "
+                f"for window_size={window_size} (L={(window_size - 1)//2}). "
                 f"Check that your weights/model_path correspond to the configured window size."
             )
 
         # Place backend CV centered in the full canvas using the true net offset (which equals L if consistent)
-        off_h = max(0, (H - Hc) // 2)
-        off_w = max(0, (W - Wc) // 2)
-        cv_full[off_h:off_h + Hc, off_w:off_w + Wc, :] = computed_cv
+        offset_row = max(0, (row - row_cost_volume) // 2)
+        offset_col = max(0, (col - col_cost_volume) // 2)
+        cost_volume_full[offset_row : offset_row + row_cost_volume, offset_col : offset_col + col_cost_volume, :] = (
+            computed_cv
+        )
 
         # Select requested columns
         index_col = np.asarray(cost_volume.attrs["col_to_compute"])
@@ -175,7 +195,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         index_col = index_col - img_left.coords["col"].data[0]
 
         # Fill Pandora cost volume slice (row, col_to_compute, disp)
-        cost_volume["cost_volume"].data = cv_full[:, index_col, :]
+        cost_volume["cost_volume"].data = cost_volume_full[:, index_col, :]
 
         # Metadata
         cost_volume.attrs.update(
