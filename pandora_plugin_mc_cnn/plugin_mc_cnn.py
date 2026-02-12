@@ -16,6 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+"""
+This module contains functions associated to mc-cnn method used in the cost volume measure step.
+"""
 
 from typing import Dict, Union, Optional
 import os
@@ -51,7 +54,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
             'window_size': int,
             'subpix': int,
             'model_path': str,
-            'model_name': str (optional; used to select a specific ONNX/IR file)
         }
         """
         super().instantiate_class(**cfg)
@@ -59,8 +61,13 @@ class MCCNN(matching_cost.AbstractMatchingCost):
 
     def check_conf(self, **cfg: Union[int, str]) -> Dict[str, Union[int, str]]:
         """
-        Add defaults and validate configuration.
-        window_size is required (and should match the weights you provide).
+        Add default values to the dictionary if there are missing elements and check if the dictionary is correct
+
+        :param cfg: matching_cost configuration
+        :type cfg: dict
+        :return cfg: matching_cost configuration updated
+        :rtype: dict
+
         """
         cfg = super().check_conf(**cfg)
 
@@ -88,9 +95,31 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         cost_volume: xr.Dataset,
     ) -> xr.Dataset:
         """
-        Compute cost volume for a pair of images using MC-CNN fast features (CPU-only).
-        Emits PROFILING_TOTAL_CV marker with total time/memory.
-        Writes metrics_total.json with total_cv_time and total_cv_mem (true peak within this function).
+        Computes the cost volume for a pair of images
+
+        :param img_left: left Dataset image
+        :type img_left:
+            xarray.Dataset containing :
+                - im: 2D (row, col) or 3D (band_im, row, col) xarray.DataArray float32
+                - disparity (optional): 3D (disp, row, col) xarray.DataArray float32
+                - msk (optional): 2D (row, col) xarray.DataArray int16
+                - classif (optional): 3D (band_classif, row, col) xarray.DataArray int16
+                - segm (optional): 2D (row, col) xarray.DataArray int16
+        :param img_right: right Dataset image
+        :type img_right:
+            xarray.Dataset containing :
+                - im: 2D (row, col) or 3D (band_im, row, col) xarray.DataArray float32
+                - disparity (optional): 3D (disp, row, col) xarray.DataArray float32
+                - msk (optional): 2D (row, col) xarray.DataArray int16
+                - classif (optional): 3D (band_classif, row, col) xarray.DataArray int16
+                - segm (optional): 2D (row, col) xarray.DataArray int16
+        :param cost_volume: an empty cost volume
+        :type cost_volume: xr.Dataset
+        :return: the cost volume dataset, with the data variables:
+                - cost_volume 3D xarray.DataArray (row, col, disp)
+        :rtype:
+            xarray.Dataset
+
         """
         # Check band parameter
         self.check_band_input_mc(img_left, img_right)
@@ -158,8 +187,10 @@ def get_band_values(image_dataset: xr.Dataset, band_name: Optional[str] = None) 
     """
     Get values of given band_name from image_dataset as numpy array.
 
-    :param image_dataset: xr.Dataset with band_im coordinate
+    :param image_dataset: image dataset with band_im coordinate
+    :type image_dataset: xr.Dataset
     :param band_name: band name to extract. If None, return all bands values.
+    :type band_name: str
     :return: selected band data as numpy array (H, W)
     """
     selection = image_dataset if band_name is None else image_dataset.sel(band_im=band_name)
