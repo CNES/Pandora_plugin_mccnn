@@ -56,8 +56,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         """
         super().instantiate_class(**cfg)
         self._model_path = str(self.cfg["model_path"])
-        # keep the configured window size (Pandora is the source of truth)
-        self._window_size = int(self.cfg.get("window_size", self._WINDOW_SIZE))
 
     def check_conf(self, **cfg: Union[int, str]) -> Dict[str, Union[int, str]]:
         """
