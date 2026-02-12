@@ -68,11 +68,12 @@ class MCCNN(matching_cost.AbstractMatchingCost):
             cfg["model_path"] = self._MODEL_PATH
 
         if "window_size" not in cfg:
-            cfg["window_size"] = self._WINDOW_SIZE  # default if not provided
+            cfg["window_size"] = self._WINDOW_SIZE
 
         schema = self.schema
         schema["matching_cost_method"] = And(str, lambda x: x == "mc_cnn")
-        schema["window_size"] = And(int, lambda x: x in [7, 11, 13, 15])
+        schema["window_size"] = And(int, lambda x: x == 11)
+        schema["subpix"] = And(int, lambda x: x == 1)
         schema["model_path"] = And(str, lambda x: os.path.exists(x))
 
         checker = Checker(schema)
