@@ -80,7 +80,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         schema = self.schema
         schema["matching_cost_method"] = And(str, lambda x: x == "mc_cnn")
         schema["window_size"] = And(int, lambda x: x == 11)
-        schema["subpix"] = And(int, lambda x: x == 1)
         schema["model_path"] = And(str, lambda x: os.path.exists(x))
 
         checker = Checker(schema)
