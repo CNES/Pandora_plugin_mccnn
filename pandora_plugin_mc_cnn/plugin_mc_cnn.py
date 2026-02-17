@@ -143,7 +143,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         # Run backend (returns (row_cost_volume, col_cost_volume, disparity)
         # with row_cost_volume=row-2 * n_conv_layer,
         # col_cost_volume=col-2 * n_conv_layer for L conv layers)
-        computed_cv = run_mc_cnn_fast(selected_band_left, selected_band_right, disp_min, disp_max, self.cfg)
+        computed_cv = run_mc_cnn_fast(selected_band_left, selected_band_right, disp_min, disp_max, self._model_path)
 
         # Validate backend output size vs configured window size
         row_cost_volume, col_cost_volume = computed_cv.shape[:2]
