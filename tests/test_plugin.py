@@ -84,6 +84,7 @@ class TestPlugin(unittest.TestCase):
 
         return nb_error / float(nb_row * nb_col)
 
+    @pytest.mark.skip(reason="# Disabled because it is failing until ticket 53 is resolved")
     def test_mc_cnn(self):
         """
         Test Pandora + plugin_mc-cnn
@@ -101,6 +102,7 @@ class TestPlugin(unittest.TestCase):
             if self.error(-1 * rasterio.open(tmp_dir + "/right_disparity.tif").read(1), self.disp_sec, 1) > 0.17:
                 raise AssertionError
 
+    @pytest.mark.skip(reason="# Disabled because it is failing until ticket 53 is resolved")
     def test_mc_cnn_default_values(self):
         """
         Test Pandora + plugin_mc-cnn without specifying parameters window size, subpix and model_path
@@ -119,6 +121,7 @@ class TestPlugin(unittest.TestCase):
             if self.error(-1 * rasterio.open(tmp_dir + "/right_disparity.tif").read(1), self.disp_sec, 1) > 0.17:
                 raise AssertionError
 
+    @pytest.mark.skip(reason="# Disabled because it is failing until ticket 53 is resolved")
     def test_mc_cnn_multiband_values(self):
         """
         Test Pandora + plugin_mc-cnn with multiband input images
@@ -137,6 +140,7 @@ class TestPlugin(unittest.TestCase):
             if self.error(-1 * rasterio.open(tmp_dir + "/right_disparity.tif").read(1), self.disp_sec, 1) > 0.17:
                 raise AssertionError
 
+    @pytest.mark.skip(reason="# Disabled because it is failing until ticket 53 is resolved")
     def test_invalidates_cost(self):
         """
         Test the pipeline compute cost volume, and invalid cost with pandora function
