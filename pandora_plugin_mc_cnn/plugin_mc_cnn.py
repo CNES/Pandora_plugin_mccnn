@@ -27,6 +27,7 @@ from json_checker import Checker, And
 import xarray as xr
 import numpy as np
 
+from pandora.img_tools import shift_right_img
 from pandora.matching_cost import matching_cost
 from pandora.profiler import profile
 from mc_cnn.run import run_mc_cnn_fast
@@ -123,17 +124,32 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         # Check band parameter
         self.check_band_input_mc(img_left, img_right)
 
+        # Contains the shifted right images
+        imgs_right_shift = shift_right_img(img_right, self._subpix, self._band, self._spline_order)
+
         # Select band(s) if multi-band
-        selected_band_left = get_band_values(img_left, self._band)
-        selected_band_right = get_band_values(img_right, self._band)
+        if self._band is None:
+            img_left_np = img_left["im"].data
+            imgs_right_shift_np = [img["im"].data for img in imgs_right_shift]
+        else:
+            band_index = list(img_left.band_im.data).index(self._band)
+            img_left_np = img_left["im"].data[band_index, :, :]
+            imgs_right_shift_np = []
+            for img in imgs_right_shift:
+                if "band_im" in img:
+                    imgs_right_shift_np.append(img["im"].data[band_index, :, :])
+                else:
+                    imgs_right_shift_np.append(img["im"].data)
+
 
         # Disparity range (Pandora allocates disparity planes)
         disparity_range = cost_volume.coords["disp"].data
         disp_min, disp_max = int(disparity_range[0]), int(disparity_range[-1])
         disparity = len(disparity_range)
+        offset_row_col = cost_volume.attrs["offset_row_col"]
 
         # Full canvas (row, col, disparity) initialized with NaN
-        row, col = selected_band_left.shape[:2]
+        row, col = img_left_np.shape[:2]
         cost_volume_full = np.full((row, col, disparity), np.nan, dtype=np.float32)
 
         # Expected shrink from configured window size
@@ -143,10 +159,34 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         # Run backend (returns (row_cost_volume, col_cost_volume, disparity)
         # with row_cost_volume=row-2 * n_conv_layer,
         # col_cost_volume=col-2 * n_conv_layer for L conv layers)
-        computed_cv = run_mc_cnn_fast(selected_band_left, selected_band_right, disp_min, disp_max, self._model_path)
+        for idx_right in range(self._subpix):
+            img_right_np = imgs_right_shift_np[idx_right]
+
+            if idx_right > 0:
+                # If the image has been shifted, the last line is removed,
+                # which is not compatible with the network's input shape.
+                # In that case, we add a column of NaN (with a value).
+                # The value is not NaN due to issues with the network.
+                img_right_np = np.concatenate((img_right_np, np.full((img_right_np.shape[0], 1), 0)), axis=1)
+
+            computed_cost_volume = run_mc_cnn_fast(
+                img_left_np.astype(np.float32),
+                img_right_np.astype(np.float32),
+                disp_min,
+                disp_max,
+                self._model_path,
+            )
+            if offset_row_col != 0:
+                cost_volume_full[offset_row_col:-offset_row_col, offset_row_col:-offset_row_col, idx_right :: self._subpix] = computed_cost_volume
+            else:
+                cost_volume_full[:, :, idx_right :: self._subpix] = computed_cost_volume
+
+            # For subpix step, remove latest disparity (replaced by a column of NaNs)
+            if idx_right == 0:
+                disp_max -= 1
 
         # Validate backend output size vs configured window size
-        row_cost_volume, col_cost_volume = computed_cv.shape[:2]
+        row_cost_volume, col_cost_volume = computed_cost_volume.shape[:2]
         expected_row_cost_volume, expected_col_cost_volume = row - 2 * n_conv_layer, col - 2 * n_conv_layer
         if (row_cost_volume, col_cost_volume) != (expected_row_cost_volume, expected_col_cost_volume):
             raise ValueError(
@@ -155,13 +195,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
                 f"for window_size={window_size} (L={(window_size - 1)//2}). "
                 f"Check that your weights/model_path correspond to the configured window size."
             )
-
-        # Place backend CV centered in the full canvas using the true net offset (which equals L if consistent)
-        offset_row = max(0, (row - row_cost_volume) // 2)
-        offset_col = max(0, (col - col_cost_volume) // 2)
-        cost_volume_full[offset_row : offset_row + row_cost_volume, offset_col : offset_col + col_cost_volume, :] = (
-            computed_cv
-        )
 
         # Select requested columns
         index_col = np.asarray(cost_volume.attrs["col_to_compute"])
@@ -180,17 +213,3 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         )
 
         return cost_volume
-
-
-def get_band_values(image_dataset: xr.Dataset, band_name: Optional[str] = None) -> np.ndarray:
-    """
-    Get values of given band_name from image_dataset as numpy array.
-
-    :param image_dataset: image dataset with band_im coordinate
-    :type image_dataset: xr.Dataset
-    :param band_name: band name to extract. If None, return all bands values.
-    :type band_name: str
-    :return: selected band data as numpy array (H, W)
-    """
-    selection = image_dataset if band_name is None else image_dataset.sel(band_im=band_name)
-    return selection["im"].to_numpy()
