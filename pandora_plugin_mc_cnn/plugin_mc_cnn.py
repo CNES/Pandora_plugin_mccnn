@@ -20,7 +20,7 @@
 This module contains functions associated to mc-cnn method used in the cost volume measure step.
 """
 
-from typing import Dict, Union, Optional
+from typing import Dict, Union
 import os
 
 from json_checker import Checker, And
@@ -141,7 +141,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
                 else:
                     imgs_right_shift_np.append(img["im"].data)
 
-
         # Disparity range (Pandora allocates disparity planes)
         disparity_range = cost_volume.coords["disp"].data
         disp_min, disp_max = int(disparity_range[0]), int(disparity_range[-1])
@@ -177,7 +176,9 @@ class MCCNN(matching_cost.AbstractMatchingCost):
                 self._model_path,
             )
             if offset_row_col != 0:
-                cost_volume_full[offset_row_col:-offset_row_col, offset_row_col:-offset_row_col, idx_right :: self._subpix] = computed_cost_volume
+                cost_volume_full[
+                    offset_row_col:-offset_row_col, offset_row_col:-offset_row_col, idx_right :: self._subpix
+                ] = computed_cost_volume
             else:
                 cost_volume_full[:, :, idx_right :: self._subpix] = computed_cost_volume
 
