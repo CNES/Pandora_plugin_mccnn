@@ -69,7 +69,7 @@ mccnn-version:
     paths:
       - setup.cfg
   rules:
-    # Run this job only if PANDORA_BRANCH is valued
+    # Run this job only if MCCNN_BRANCH is valued
     - if: $MCCNN_BRANCH
 
 # Default configuration for all jobs
