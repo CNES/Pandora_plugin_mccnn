@@ -11,7 +11,7 @@
 
 
 include:
-  - component: $CI_SERVER_FQDN/to-be-continuous/python/gitlab-ci-python@8.1.3  # TBC Python component version
+  - component: $CI_SERVER_FQDN/to-be-continuous/python/gitlab-ci-python@8.6.0  # TBC Python component version
     # Default stage for jobs is build.
     # Below is the list of items to contains.
     inputs:
@@ -40,6 +40,10 @@ variables:
   #INTEG_REF: /^(develop|release|TickerNumber-XXX)$/
   INTEG_REF: /^(develop|release)$/
 
+  # MC-CNN's branch to integrate with
+  # Override from pipeline GUI/Schedule if needed
+  MCCNN_BRANCH: rt_mccnn_integration
+
   PIP_INDEX_URL: "https://${PANDORA_ARTIFACTORY_USERNAME}:${PANDORA_ARTIFACTORY_KEY}@${UL_ARTIFACTORY_HOST}/artifactory/api/pypi/pypi/simple"
   # Runs Pylint only on the following directories
   PYLINT_FILES: pandora_plugin_mc_cnn tests
@@ -50,6 +54,23 @@ variables:
   variables:
     # The image follow PEP 668
     PIP_OPTS: "--break-system-packages"
+
+
+# Set the version of MCCNN to use
+mccnn-version:
+  stage: .pre
+  image: $PYTHON_IMAGE
+  extends: .python-base
+  script:
+    # Use CI job token to authenticate
+    - echo "MCCNN_BRANCH=$MCCNN_BRANCH"
+    - sed -i 's#"MCCNN[>=<].*",#"MCCNN @ git+https://gitlab-ci-token@'${CI_SERVER_HOST}/dali/PandoraBox/mc-cnn.git@${MCCNN_BRANCH}'",#' pyproject.toml
+  artifacts:
+    paths:
+      - pyproject.toml
+  rules:
+    # Run this job only if PANDORA_BRANCH is valued
+    - if: $MCCNN_BRANCH
 
 # Default configuration for all jobs
 default:
