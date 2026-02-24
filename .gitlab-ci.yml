@@ -64,7 +64,7 @@ mccnn-version:
   script:
     # Use CI job token to authenticate
     - echo "MCCNN_BRANCH=$MCCNN_BRANCH"
-    - sed -i 's#"MCCNN[>=<].*",#"MCCNN @ git+https://gitlab-ci-token@'${CI_SERVER_HOST}/dali/PandoraBox/mc-cnn.git@${MCCNN_BRANCH}'",#' setup.cfg
+    - sed -i "s#MCCNN[>=<].*#MCCNN @ git+https://gitlab-ci-token@${CI_SERVER_HOST}/dali/PandoraBox/mc-cnn.git@${MCCNN_BRANCH}#" setup.cfg
   artifacts:
     paths:
       - setup.cfg
