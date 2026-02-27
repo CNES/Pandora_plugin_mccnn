@@ -43,7 +43,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
     """
 
     _WINDOW_SIZE = 11
-    _SUBPIX = 1
     _MODEL_PATH = str(get_weights())  # Pretrained weights from mc_cnn package
     _BAND = None
 
