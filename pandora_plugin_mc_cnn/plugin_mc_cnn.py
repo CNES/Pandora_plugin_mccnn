@@ -150,10 +150,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         row, col = img_left_np.shape[:2]
         cost_volume_full = np.full((row, col, disparity), np.nan, dtype=np.float32)
 
-        # Expected shrink from configured window size
-        window_size = int(self.cfg.get("window_size", self._WINDOW_SIZE))
-        n_conv_layer = max(0, (window_size - 1) // 2)
-
         # Run backend (returns (row_cost_volume, col_cost_volume, disparity)
         # with row_cost_volume=row-2 * n_conv_layer,
         # col_cost_volume=col-2 * n_conv_layer for L conv layers)
@@ -184,17 +180,6 @@ class MCCNN(matching_cost.AbstractMatchingCost):
             # For subpix step, remove latest disparity (replaced by a column of NaNs)
             if idx_right == 0:
                 disp_max -= 1
-
-        # Validate backend output size vs configured window size
-        row_cost_volume, col_cost_volume = computed_cost_volume.shape[:2]
-        expected_row_cost_volume, expected_col_cost_volume = row - 2 * n_conv_layer, col - 2 * n_conv_layer
-        if (row_cost_volume, col_cost_volume) != (expected_row_cost_volume, expected_col_cost_volume):
-            raise ValueError(
-                f"MC-CNN backend output shape mismatch: got ({row_cost_volume},{col_cost_volume}), "
-                f"expected ({expected_row_cost_volume},{expected_col_cost_volume}) "
-                f"for window_size={window_size} (L={(window_size - 1)//2}). "
-                f"Check that your weights/model_path correspond to the configured window size."
-            )
 
         # Select requested columns
         index_col = np.asarray(cost_volume.attrs["col_to_compute"])
