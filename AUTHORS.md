@@ -1,6 +1,6 @@
 # Credits
 
-Copyright (c) 2024 Centre National d'Etudes Spatiales (CNES).
+Copyright (c) 2026 Centre National d'Etudes Spatiales (CNES).
 
 Pandora plugin MC-CNN is licensed under permissive Apache 2 license (See LICENSE file).
 The copyright is kept CNES only for long term maintenance ease.
@@ -24,6 +24,8 @@ This file keeps track of authors contributions.
 * Natalia Jimenez <natalia.jimenez-diaz@csgroup.eu>
 * Yoann Steux <yoann.steux@cs-soprasteria.com>
 * Mathis Roux <mathis.roux@cs-soprasteria.com>
+* Pauline Delporte <pauline.delporte@cs-soprasteria.com>
+* Clément Herbin <clement.herbin@cs-soprasteria.com>
 
 Update here with new contributors.
 
