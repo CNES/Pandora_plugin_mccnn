@@ -42,7 +42,7 @@ variables:
 
   # MC-CNN's branch to integrate with
   # Override from pipeline GUI/Schedule if needed
-  MCCNN_BRANCH: rt_mccnn_integration
+  MCCNN_BRANCH: release
 
   PIP_INDEX_URL: "https://${PANDORA_ARTIFACTORY_USERNAME}:${PANDORA_ARTIFACTORY_KEY}@${UL_ARTIFACTORY_HOST}/artifactory/api/pypi/pypi/simple"
   # Runs Pylint only on the following directories
