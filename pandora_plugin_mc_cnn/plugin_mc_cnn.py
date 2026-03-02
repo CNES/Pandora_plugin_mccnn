@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# coding: utf8
-#
-# Copyright (c) 2025 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2026 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Pandora plugin MC-CNN
 #
@@ -20,11 +17,12 @@
 # limitations under the License.
 #
 """
-This module contains all functions to calculate the cost volume with mc-cnn networks
+This module contains functions associated to mc-cnn method used in the cost volume measure step.
 """
 
 from typing import Dict, Union
 import os
+
 from json_checker import Checker, And
 import xarray as xr
 import numpy as np
@@ -39,24 +37,24 @@ from mc_cnn.weights import get_weights
 @matching_cost.AbstractMatchingCost.register_subclass("mc_cnn")
 class MCCNN(matching_cost.AbstractMatchingCost):
     """
+    MC-CNN plugin that computes a cost volume using MC-CNN fast features and a cosine similarity loop.
 
-    MCCNN class is a plugin that create a cost volume by calling the McCNN library: a neural network that produce a
-    similarity score
-
+    CPU-only baseline (even if a GPU is present).
     """
 
     _WINDOW_SIZE = 11
-    # Path to the pretrained model
-    _MODEL_PATH = str(get_weights())  # Weights file "mc_cnn_fast_mb_weights.pt" in MC-CNN pip package
+    _MODEL_PATH = str(get_weights())  # Pretrained weights from mc_cnn package
     _BAND = None
 
-    @profile("mccnn.__init__")
+    @profile("mc_cnn.__init__")
     def __init__(self, **cfg: Union[int, str]):
         """
-
-        :param cfg: optional configuration, {'matching_cost_method': value,
-        'window_size': value, 'subpix': value, 'model_path' :value}
-        :type cfg: dictionary
+        :param cfg: {
+            'matching_cost_method': str,
+            'window_size': int,
+            'subpix': int,
+            'model_path': str,
+        }
         """
         super().instantiate_class(**cfg)
         self._model_path = str(self.cfg["model_path"])
@@ -69,14 +67,18 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         :type cfg: dict
         :return cfg: matching_cost configuration updated
         :rtype: dict
+
         """
         cfg = super().check_conf(**cfg)
 
         if "model_path" not in cfg:
             cfg["model_path"] = self._MODEL_PATH
 
+        if "window_size" not in cfg:
+            cfg["window_size"] = self._WINDOW_SIZE
+
         schema = self.schema
-        schema["matching_cost_method"] = And(str, lambda input: "mc_cnn")
+        schema["matching_cost_method"] = And(str, lambda x: x == "mc_cnn")
         schema["window_size"] = And(int, lambda x: x == 11)
         schema["model_path"] = And(str, lambda x: os.path.exists(x))
 
@@ -84,7 +86,7 @@ class MCCNN(matching_cost.AbstractMatchingCost):
         checker.validate(cfg)
         return cfg
 
-    @profile("mccnn.compute_cost_volume")
+    @profile("mc_cnn.compute_cost_volume")
     def compute_cost_volume(
         self,
         img_left: xr.Dataset,
@@ -116,14 +118,15 @@ class MCCNN(matching_cost.AbstractMatchingCost):
                 - cost_volume 3D xarray.DataArray (row, col, disp)
         :rtype:
             xarray.Dataset
+
         """
-        # check band parameter
+        # Check band parameter
         self.check_band_input_mc(img_left, img_right)
 
         # Contains the shifted right images
         imgs_right_shift = shift_right_img(img_right, self._subpix, self._band, self._spline_order)
 
-        # If multiband, select the corresponding band
+        # Select band(s) if multi-band
         if self._band is None:
             img_left_np = img_left["im"].data
             imgs_right_shift_np = [img["im"].data for img in imgs_right_shift]
@@ -137,50 +140,56 @@ class MCCNN(matching_cost.AbstractMatchingCost):
                 else:
                     imgs_right_shift_np.append(img["im"].data)
 
+        # Disparity range (Pandora allocates disparity planes)
         disparity_range = cost_volume.coords["disp"].data
-        disp_min, disp_max = disparity_range[0], disparity_range[-1]
+        disp_min, disp_max = int(disparity_range[0]), int(disparity_range[-1])
+        disparity = len(disparity_range)
         offset_row_col = cost_volume.attrs["offset_row_col"]
 
-        cv = np.full((img_left_np.shape[0], img_left_np.shape[1], len(disparity_range)), np.nan, dtype=np.float32)
+        # Full canvas (row, col, disparity) initialized with NaN
+        row, col = img_left_np.shape[:2]
+        cost_volume_full = np.full((row, col, disparity), np.nan, dtype=np.float32)
 
-        # If offset, do not consider border position for cost computation
+        # Run backend (returns (row_cost_volume, col_cost_volume, disparity)
+        # with row_cost_volume=row-2 * n_conv_layer,
+        # col_cost_volume=col-2 * n_conv_layer for L conv layers)
         for idx_right in range(self._subpix):
             img_right_np = imgs_right_shift_np[idx_right]
 
             if idx_right > 0:
                 # If the image has been shifted, the last line is removed,
-                #   which is not compatible with the network's input shape.
+                # which is not compatible with the network's input shape.
                 # In that case, we add a column of NaN (with a value).
                 # The value is not NaN due to issues with the network.
                 img_right_np = np.concatenate((img_right_np, np.full((img_right_np.shape[0], 1), 0)), axis=1)
 
+            computed_cost_volume = run_mc_cnn_fast(
+                img_left_np.astype(np.float32),
+                img_right_np.astype(np.float32),
+                disp_min,
+                disp_max,
+                self._model_path,
+            )
             if offset_row_col != 0:
-                cv[offset_row_col:-offset_row_col, offset_row_col:-offset_row_col, idx_right :: self._subpix] = (
-                    run_mc_cnn_fast(
-                        img_left_np.astype(np.float32),
-                        img_right_np.astype(np.float32),
-                        disp_min,
-                        disp_max,
-                        self._model_path,
-                    )
-                )
+                cost_volume_full[
+                    offset_row_col:-offset_row_col, offset_row_col:-offset_row_col, idx_right :: self._subpix
+                ] = computed_cost_volume
             else:
-                cv[:, :, idx_right :: self._subpix] = run_mc_cnn_fast(
-                    img_left_np.astype(np.float32),
-                    img_right_np.astype(np.float32),
-                    disp_min,
-                    disp_max,
-                    self._model_path,
-                )
+                cost_volume_full[:, :, idx_right :: self._subpix] = computed_cost_volume
 
             # For subpix step, remove latest disparity (replaced by a column of NaNs)
             if idx_right == 0:
                 disp_max -= 1
 
-        index_col = cost_volume.attrs["col_to_compute"]
-        index_col = index_col - img_left.coords["col"].data[0]  # If first col coordinate is not 0
-        cost_volume["cost_volume"].data = cv[:, index_col, :]
-        # Allocate the xarray cost volume
+        # Select requested columns
+        index_col = np.asarray(cost_volume.attrs["col_to_compute"])
+        # Rebase if first column coordinate != 0
+        index_col = index_col - img_left.coords["col"].data[0]
+
+        # Fill Pandora cost volume slice (row, col_to_compute, disp)
+        cost_volume["cost_volume"].data = cost_volume_full[:, index_col, :]
+
+        # Metadata
         cost_volume.attrs.update(
             {
                 "type_measure": "min",
