@@ -75,8 +75,7 @@ mccnn-version:
 # Default configuration for all jobs
 default:
   tags:
-    - Usine_Logicielle
-  timeout: 30 minutes
+    - Usine_Logicielle_Podman
 
 # Black job
 py-black:
