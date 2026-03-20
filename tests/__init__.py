@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# coding: utf8
-#
 # Copyright (c) 2026 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Pandora plugin MC-CNN
@@ -19,6 +16,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-"""
-Init file for pandora_plugin_mc_cnn package
-"""

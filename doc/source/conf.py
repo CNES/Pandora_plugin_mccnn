@@ -1,7 +1,7 @@
 # pylint: skip-file
 #
 # coding: utf8
-# Copyright (c) 2025 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2026 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Pandora plugin mccnn
 #
@@ -35,13 +35,12 @@ sys.path.insert(0, os.path.abspath("../plugin_mc-cnn"))
 sys.setrecursionlimit(8 * sys.getrecursionlimit())
 
 
-
 # -- Project information -----------------------------------------------------
 
 project = "Pandora Plugin Mccnn"
-copyright = "2024, CNES"
+copyright = "2026, CNES"
 author = "CNES"
-version = "1.0.0"
+version = "1.3.6a1"
 
 # -- General configuration ---------------------------------------------------
 
