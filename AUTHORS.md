@@ -12,26 +12,27 @@ This file keeps track of authors contributions.
 ## Development Lead
 
 * Alexandre Constantin <alexandre.constantin@cnes.fr>
-* Alice de Bardonnèche-Richard <alice.de-bardonneche-richard@cs-soprasteria.com>
 * Marie Leconte <marie.leconte@cs-soprasteria.com>
 * Elisa Duz <elisa.duz@cs-soprasteria.com>
-* Philippe Mallet-Ladeira <philippe.mallet-ladeira@cs-soprasteria.com>
+* Alexandre Vinas <alexandre.vinas@cs-soprasteria.com>
 
 ## Contributors
 
-* Veronique Defonte <veronique.defonte@csgroup.eu>
-* Quentin Fardet <quentin.fardet@csgroup.eu>
-* Natalia Jimenez <natalia.jimenez-diaz@csgroup.eu>
+* Veronique Defonte
+* Quentin Fardet <quentin.fardet@cs-soprasteria.com>
+* Natalia Jimenez
 * Yoann Steux <yoann.steux@cs-soprasteria.com>
 * Mathis Roux <mathis.roux@cs-soprasteria.com>
 * Pauline Delporte <pauline.delporte@cs-soprasteria.com>
 * Clément Herbin <clement.herbin@cs-soprasteria.com>
+* Philippe Mallet-Ladeira <philippe.mallet-ladeira@cs-soprasteria.com>
+* Alice de Bardonnèche-Richard <alice.de-bardonneche-richard@cs-soprasteria.com>
 
 Update here with new contributors.
 
 ## Original Developers/Designers/Supporters
 
 * Myriam Cournet <myriam.cournet@cnes.fr>
-* Veronique Defonte <veronique.defonte@csgroup.eu>
+* Veronique Defonte
 * Emmanuelle Sarrazin <emmanuelle.sarrazin@cnes.fr>
 * Loïc Dumas <loic.dumas@cs-soprasteria.com>
