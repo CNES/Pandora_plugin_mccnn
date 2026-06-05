@@ -43,9 +43,20 @@ More specifically, you can find :
 
 ### Download weights files
 
-Pretrained weights for mc-cnn fast and mc-cnn accurate neural networks are available in the weights directory :
--  mc_cnn_fast_mb_weights.pt and mc_cnn_accurate_mb_weights.pt are the weights of the pretrained networks on the Middlebury dataset [[Middlebury]](#Middlebury)
--  mc_cnn_fast_data_fusion_contest.pt and mc_cnn_accurate_data_fusion_contest.pt are the weights of the pretrained networks on the Data Fusion Contest dataset [[DFC]](#DFC)
+Pretrained weights for mc-cnn fast and mc-cnn accurate neural networks are available in the MCCNN [repository](https://github.com/CNES/Pandora_MCCNN/tree/master/src/mc_cnn/weights):
+
+**Fast network**
+
+-  mc_cnn_fast_mb_weights.pt are the weights of the pretrained networks on the Middlebury dataset [[Middlebury]](#Middlebury)
+-  mc_cnn_fast_data_fusion_contest.pt are the weights of the pretrained networks on the Data Fusion Contest dataset [[DFC]](#DFC)
+-  mc_cnn_fast_dw.onnx are the weights of the pretrained networks using depthwise convolutions on the Middlebury dataset [[Middlebury]](#Middlebury)
+-  mc_cnn_fast_int8_excl_01.onnx are the weights of the quantized pretrained networks on the Middlebury dataset [[Middlebury]](#Middlebury), where layers 0 and 1 are excluded from quantization
+
+**Accurate network**
+
+-  mc_cnn_accurate_mb_weights.pt are the weights of the pretrained networks on the Middlebury dataset [[Middlebury]](#Middlebury)
+-  mc_cnn_accurate_data_fusion_contest.pt are the weights of the pretrained networks on the Data Fusion Contest dataset [[DFC]](#DFC)
+
 
 To download the pretrained weights:
 
@@ -54,6 +65,8 @@ wget https://raw.githubusercontent.com/CNES/Pandora_MCCNN/master/mc_cnn/weights/
 wget https://raw.githubusercontent.com/CNES/Pandora_MCCNN/master/mc_cnn/weights/mc_cnn_fast_data_fusion_contest.pt
 wget https://raw.githubusercontent.com/CNES/Pandora_MCCNN/master/mc_cnn/weights/mc_cnn_accurate_mb_weights.pt
 wget https://raw.githubusercontent.com/CNES/Pandora_MCCNN/master/mc_cnn/weights/mc_cnn_accurate_data_fusion_contest.pt
+wget https://raw.githubusercontent.com/CNES/Pandora_MCCNN/master/mc_cnn/weights/mc_cnn_fast_dw.onnx
+wget https://raw.githubusercontent.com/CNES/Pandora_MCCNN/master/mc_cnn/weights/mc_cnn_fast_int8_excl_01.onnx
 ```
 
 ### Access weights from pip package
@@ -66,7 +79,9 @@ from mc_cnn.weights import get_weights
 mc_cnn_fast_mb_weights_path = get_weights(arch="fast", training_dataset="middlebury")
 mc_cnn_fast_data_fusion_contest_path = get_weights(arch="fast", training_dataset="dfc")
 mc_cnn_accurate_mb_weights_path = get_weights(arch="accurate", training_dataset="middlebury")
-mc_cnn_accurate_data_fusion_contest = get_weights(arch="accurate", training_dataset="dfc")
+mc_cnn_accurate_data_fusion_contest_path = get_weights(arch="accurate", training_dataset="dfc")
+mc_cnn_onnx_fast_int8_path = get_weights(arch="onnx_fast_int8", training_dataset="middlebury")
+mc_cnn_onnx_fast_dw_path = get_weights(arch="onnx_fast_dw", training_dataset="middlebury")
 ```
 
 ## Output example
