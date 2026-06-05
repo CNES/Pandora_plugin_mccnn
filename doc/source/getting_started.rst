@@ -37,11 +37,21 @@ More specifically, you can find :
 Pretrained Weights for MCCNN networks
 #####################################
 
-Pretrained weights for mc-cnn fast and mc-cnn accurate neural networks are available in the weights directory :
+Pretrained weights for mc-cnn fast and accurate networks are available in the MC-CNN 
+`repository <https://github.com/CNES/Pandora_MCCNN/tree/master/src/mc_cnn/weights>`_ :
 
--  mc_cnn_fast_mb_weights.pt and mc_cnn_accurate_mb_weights.pt are the weights of the pretrained networks on the Middlebury dataset [Middlebury]_
+**Fast network**
 
--  mc_cnn_fast_data_fusion_contest.pt and mc_cnn_accurate_data_fusion_contest.pt are the weights of the pretrained networks on the Data Fusion Contest dataset [DFC]_
+-  mc_cnn_fast_mb_weights.pt are the weights of the pretrained networks on the Middlebury dataset [Middlebury]_
+-  mc_cnn_fast_data_fusion_contest.pt are the weights of the pretrained networks on the Data Fusion Contest dataset [DFC]_
+-  mc_cnn_fast_dw.onnx are the weights of the pretrained networks using depthwise convolutions on the Middlebury dataset [Middlebury]_
+-  mc_cnn_fast_int8_excl_01.onnx are the weights of the quantized pretrained networks on the Middlebury dataset [Middlebury]_, where layers 0 and 1 are excluded from quantization
+
+**Accurate network**
+
+-  mc_cnn_accurate_mb_weights.pt are the weights of the pretrained networks on the Middlebury dataset [Middlebury]_
+-  mc_cnn_accurate_data_fusion_contest.pt are the weights of the pretrained networks on the Data Fusion Contest dataset [DFC]_
+
 
 .. [Middlebury] Scharstein, D., Hirschmüller, H., Kitajima, Y., Krathwohl, G., Nešić, N., Wang, X., & Westling, P. (2014, September). High-resolution stereo datasets with subpixel-accurate ground truth. In German conference on pattern recognition (pp. 31-42). Springer, Cham.
 
