@@ -14,7 +14,7 @@
         "subpix": 1,
         "window_size": 11,
         "band":"r",
-        "model_path": "tests/weights/mc_cnn_fast_mb_weights.pt"
+        "model_path": "tests/weights/mc_cnn_fast_int8_excl_01.onnx"
     },
     "aggregation" : {
         "aggregation_method": "cbca"

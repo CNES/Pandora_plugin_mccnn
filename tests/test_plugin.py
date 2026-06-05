@@ -104,7 +104,7 @@ class TestPlugin(unittest.TestCase):
     def test_mc_cnn_default_values(self):
         """
         Test Pandora + plugin_mc-cnn without specifying parameters window size, subpix and model_path
-        Uses the default model path : "mc_cnn_fast_mb_weights.pt" stored in MC-CNN pip package
+        Uses the default model path : "mc_cnn_fast_int8_excl_01.onnx" stored in MC-CNN pip package
 
         """
         # Create temporary directory
@@ -122,7 +122,7 @@ class TestPlugin(unittest.TestCase):
     def test_mc_cnn_multiband_values(self):
         """
         Test Pandora + plugin_mc-cnn with multiband input images
-        Uses the default model path : "mc_cnn_fast_mb_weights.pt" stored in MC-CNN pip package
+        Uses the default model path : "mc_cnn_fast_int8_excl_01.onnx" stored in MC-CNN pip package
 
         """
         # Create temporary directory
@@ -320,7 +320,7 @@ class TestPlugin(unittest.TestCase):
                 "matching_cost_method": "mc_cnn",
                 "window_size": 11,
                 "subpix": 1,
-                "model_path": "tests/weights/mc_cnn_fast_mb_weights.pt",
+                "model_path": "tests/weights/mc_cnn_fast_int8_excl_01.onnx",
             }
         )
         disparity_grids = (
@@ -525,7 +525,7 @@ class TestPlugin(unittest.TestCase):
                 "matching_cost_method": "mc_cnn",
                 "window_size": 11,
                 "subpix": 1,
-                "model_path": "tests/weights/mc_cnn_fast_mb_weights.pt",
+                "model_path": "tests/weights/mc_cnn_fast_int8_excl_01.onnx",
             }
         )
         disparity_grids = (
