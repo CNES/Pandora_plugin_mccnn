@@ -40,7 +40,7 @@ sys.setrecursionlimit(8 * sys.getrecursionlimit())
 project = "Pandora Plugin Mccnn"
 copyright = "2026, CNES"
 author = "CNES"
-version = "1.3.7"
+version = "1.3.8a1"
 
 # -- General configuration ---------------------------------------------------
 
